@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project data-collector with libraries in sub-folder">
+    <!--this file was created by Eclipse Runnable JAR Export Wizard-->
+    <!--ANT 1.7 is required                                        -->
+    <target name="create_run_jar">
+        <jar destfile="/home/esutdal/Work/fmt-etl/data-collector.jar">
+            <manifest>
+                <attribute name="Main-Class" value="com.egi.etl.DataCollector"/>
+                <attribute name="Class-Path" value=". data-collector_lib/commons-lang3-3.1.jar data-collector_lib/lambdaj-2.4-with-dependencies.jar data-collector_lib/log4j-1.2.16.jar data-collector_lib/mysql-connector-java-5.1.23-bin.jar data-collector_lib/akka-actor_2.10-2.1.1.jar data-collector_lib/scala-library.jar data-collector_lib/smpp.jar data-collector_lib/hazelcast-all-2.5.jar"/>
+            </manifest>
+            <fileset dir="/home/esutdal/workspace/github/data-collector/bin"/>
+        </jar>
+        <delete dir="/home/esutdal/Work/data-collector_lib"/>
+        <mkdir dir="/home/esutdal/Work/data-collector_lib"/>
+        <copy file="/home/esutdal/workspace/github/data-collector/lib/commons-lang3-3.1.jar" todir="/home/esutdal/Work/data-collector_lib"/>
+        <copy file="/home/esutdal/workspace/github/data-collector/lib/lambdaj-2.4-with-dependencies.jar" todir="/home/esutdal/Work/data-collector_lib"/>
+        <copy file="/home/esutdal/workspace/github/data-collector/lib/log4j-1.2.16.jar" todir="/home/esutdal/Work/data-collector_lib"/>
+        <copy file="/home/esutdal/workspace/github/data-collector/lib/mysql-connector-java-5.1.23-bin.jar" todir="/home/esutdal/Work/data-collector_lib"/>
+        <copy file="/home/esutdal/workspace/github/data-collector/lib/akka-actor_2.10-2.1.1.jar" todir="/home/esutdal/Work/data-collector_lib"/>
+        <copy file="/home/esutdal/workspace/github/data-collector/lib/scala-library.jar" todir="/home/esutdal/Work/data-collector_lib"/>
+        <copy file="/home/esutdal/workspace/github/data-collector/lib/smpp.jar" todir="/home/esutdal/Work/data-collector_lib"/>
+        <copy file="/home/esutdal/workspace/github/data-collector/lib/hazelcast-all-2.5.jar" todir="/home/esutdal/Work/data-collector_lib"/>
+    </target>
+</project>

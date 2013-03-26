@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.7.0_17"/>
+	<classpathentry kind="lib" path="lib/commons-lang3-3.1.jar"/>
+	<classpathentry kind="lib" path="lib/lambdaj-2.4-with-dependencies.jar"/>
+	<classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
+	<classpathentry kind="lib" path="lib/mysql-connector-java-5.1.23-bin.jar"/>
+	<classpathentry kind="lib" path="lib/akka-actor_2.10-2.1.1.jar"/>
+	<classpathentry kind="lib" path="lib/scala-library.jar"/>
+	<classpathentry kind="lib" path="lib/smpp.jar" sourcepath="/home/esutdal/lib/open-smpp/api"/>
+	<classpathentry kind="lib" path="lib/commons-io-2.4.jar"/>
+	<classpathentry kind="lib" path="lib/config-1.0.0.jar"/>
+	<classpathentry kind="lib" path="lib/jedis-2.1.0.jar" sourcepath="/home/esutdal/lib/jedis-master/src/main/java"/>
+	<classpathentry kind="lib" path="lib/akka-file-mailbox_2.10-2.1.1.jar"/>
+	<classpathentry kind="lib" path="lib/hazelcast-2.5.jar"/>
+	<classpathentry kind="lib" path="lib/akka-mailboxes-common_2.10-2.1.1.jar"/>
+	<classpathentry kind="lib" path="lib/protobuf-java-2.4.1.jar"/>
+	<classpathentry kind="lib" path="lib/akka-remote_2.10-2.1.1.jar"/>
+	<classpathentry kind="lib" path="lib/edtftpj.jar"/>
+	<classpathentry kind="lib" path="/home/esutdal/lib/jsmpp-2.1.0/jsmpp-2.1.0.jar"/>
+	<classpathentry kind="lib" path="/home/esutdal/lib/jsmpp-2.1.0/lib/slf4j-api-1.4.3.jar"/>
+	<classpathentry kind="lib" path="/home/esutdal/lib/jsmpp-2.1.0/lib/slf4j-log4j12-1.4.3.jar"/>
+	<classpathentry kind="lib" path="lib/ganymed-ssh2-build251beta1.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
