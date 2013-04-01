@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
-import com.egi.datacollector.Main;
+import com.egi.datacollector.startup.Main;
 import com.egi.datacollector.util.Config;
 import com.egi.datacollector.util.concurrent.ActorFramework;
 import com.egi.datacollector.util.exception.GeneralException;

@@ -5,11 +5,11 @@ import java.net.BindException;
 
 import org.apache.log4j.Logger;
 
-import com.egi.datacollector.Main;
 import com.egi.datacollector.listener.Listener;
 import com.egi.datacollector.listener.ListenerState.State;
 import com.egi.datacollector.listener.cluster.ClusterListener;
 import com.egi.datacollector.listener.cluster.ClusterLock;
+import com.egi.datacollector.startup.Main;
 import com.egi.datacollector.util.Config;
 import com.egi.datacollector.util.concurrent.ActorFramework;
 import com.logica.smpp.pdu.SubmitSM;

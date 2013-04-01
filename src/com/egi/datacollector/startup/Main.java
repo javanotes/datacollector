@@ -1,4 +1,4 @@
-package com.egi.datacollector;
+package com.egi.datacollector.startup;
 
 import java.io.File;
 import java.io.FileInputStream;

@@ -41,7 +41,7 @@ JVM_FLAGS="$JVM_FLAGS -DCompType=${COMPTYPE}"
 JVM_FLAGS="$JVM_FLAGS -Xms128m -Xmx128m"
 JVM_FLAGS="$JVM_FLAGS -XX:+UseParallelOldGC"
 
-START_CMD="$JAVA_HOME/bin/java -server -D$PROCESS_TO_MONITOR $JVM_FLAGS -cp $CLASSPATH com.egi.datacollector.Main -c $APP_CONFIG"
+START_CMD="$JAVA_HOME/bin/java -server -D$PROCESS_TO_MONITOR $JVM_FLAGS -cp $CLASSPATH com.egi.datacollector.startup.Main -c $APP_CONFIG"
 
 #############################################################################
 # Prints the process id of the process ${PROCESS_TO_MONITOR}

@@ -16,9 +16,9 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import com.egi.datacollector.Main;
 import com.egi.datacollector.listener.Listener;
 import com.egi.datacollector.listener.ListenerState.State;
+import com.egi.datacollector.startup.Main;
 import com.egi.datacollector.util.Config;
 
 @Deprecated
