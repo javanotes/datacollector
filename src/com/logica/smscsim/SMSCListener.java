@@ -18,6 +18,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.egi.datacollector.util.Config;
 import com.logica.smpp.Connection;
 import com.logica.smpp.SmppObject;
 import com.logica.smpp.TCPIPConnection;
@@ -168,7 +169,7 @@ public class SMSCListener extends SmppObject implements Runnable
         debug.exit(this);
     }
     
-    private final ExecutorService threadPool = Executors.newCachedThreadPool(new ThreadFactory() {
+    private final ExecutorService threadPool = Config.getSmppMaxConnSize() == 0 ? Executors.newCachedThreadPool(new ThreadFactory() {
 		
     	private AtomicInteger n = new AtomicInteger();
 		@Override
@@ -176,7 +177,18 @@ public class SMSCListener extends SmppObject implements Runnable
 			
 			return new Thread(r, "datacollector.smpp.request-"+n.getAndIncrement());
 		}
-	});
+	})
+	
+	:
+		Executors.newFixedThreadPool(Config.getSmppMaxConnSize(), new ThreadFactory() {
+			
+	    	private AtomicInteger n = new AtomicInteger();
+			@Override
+			public Thread newThread(Runnable r) {
+				
+				return new Thread(r, "datacollector.smpp.request-"+n.getAndIncrement());
+			}
+		});
     
     /**
      * The "one" listen attempt called from <code>run</code> method.

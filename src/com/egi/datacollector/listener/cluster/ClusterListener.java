@@ -106,8 +106,10 @@ public class ClusterListener extends Listener implements Runnable {
 			state.set(State.Running);
 			Main._instanceLatchNotify();
 			log.info("Running Cluster listener");
-			cluster.clearPendingEntries();
-			log.info("Cleared pending entries");
+			if (!Config.isClusteredModeEnabled()) {
+				cluster.clearPendingEntries();
+				log.info("Cleared pending entries");
+			}
 			
 		}
 				
@@ -180,13 +182,14 @@ public class ClusterListener extends Listener implements Runnable {
 	
 	public void removeFromClusterJobMap(Object entryKey){
 		if(entryKey != null){
-			cluster.remove(entryKey);
+			cluster.remove((Long) entryKey);
 		}
 	}
 	
 	public void addToClusterJobMap(ShortMessageValue sms){
 		log.debug("Got a new sms to set to distributed map: " + sms.getMessageId());
-		cluster.put(sms.getMessageId(), sms);
+		//cluster.put(sms.getMessageId(), sms);
+		cluster.put(sms);
 	}
 	@Deprecated
 	public void addToClusterJobMap(byte [] dataBytes){
@@ -211,6 +214,7 @@ public class ClusterListener extends Listener implements Runnable {
 		
 	}
 	
+		
 	/**
 	 * 
 	 * @author esutdal
@@ -329,6 +333,7 @@ public class ClusterListener extends Listener implements Runnable {
 			try {
 				cluster = new Cluster();
 				cluster.init(new InstanceListener(), new TopicListener(), new LocalMapListener());
+				
 			} catch (FileNotFoundException e) {
 				log.fatal("Unable to read hazelcast config. Cluster listener not running!", e);
 				state.set(State.Error);

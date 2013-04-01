@@ -1,6 +1,10 @@
 package com.egi.datacollector.util.concurrent;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.log4j.Logger;
+
+import scala.concurrent.duration.Duration;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
@@ -34,6 +38,7 @@ public class ActorFramework {
 			akka.stop(fileRecordLoader);
 		}
 		akka.shutdown();
+		akka.awaitTermination(Duration.apply(1, TimeUnit.MINUTES));
 		log.info("Stopped actor system");
 	}
 	
@@ -106,6 +111,9 @@ public class ActorFramework {
 		smppLoader.tell(mapEntry, akka.guardian());
 	}
 	
+	public void processDataFromDistributedMap(Object mapValue){
+		smppLoader.tell(mapValue, akka.guardian());
+	}
 	
 	private ActorRef smppDistributor = null;
 	private ActorRef smppLoader = null;

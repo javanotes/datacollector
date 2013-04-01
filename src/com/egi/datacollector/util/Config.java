@@ -102,7 +102,8 @@ public class Config {
 		return getProperty(key, "");
 	}
 	public static String getProperty(String key, String defaultValue){
-		return props.getProperty(key, defaultValue);
+		String value = props.getProperty(key, defaultValue);
+		return Utilities.isNullOrBlank(value) ? defaultValue : value;
 	}
 	public static Properties getConfiguration(){
 		return props;
@@ -111,13 +112,21 @@ public class Config {
 
 	public static String getLog4jLocation() {
 		
-		return getProperty("datacollector.log4j.path");
+		return getProperty("datacollector.log4j.config.path");
 	}
 	public static String getHazelcastConfig() {
 		
-		return getProperty("datacollector.hazelcast.path");
+		return getProperty("datacollector.hazelcast.config.path");
 	}
 
+	public static int getSmppMaxConnSize(){
+		try {
+			return Integer.parseInt(getProperty("datacollector.listener.smpp.max_session"));
+		} catch (NumberFormatException e) {
+			
+		}
+		return 0;
+	}
 	public static int getSMPPListenPort() {
 		
 		try {
@@ -266,6 +275,10 @@ public class Config {
 			
 		}
 		return 0;
+	}
+	
+	public static boolean isClusteredModeEnabled(){
+		return "true".equals(getProperty("datacollector.hazelcast.mode.cluster"));
 	}
 
 	public static long getSmppRetryWait() {

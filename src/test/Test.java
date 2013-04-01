@@ -27,8 +27,8 @@ public class Test {
 	static SubmitSM pdu = null;
 	private static TimeFormatter timeFormatter = new AbsoluteTimeFormatter();;
 	
-	public static final int NO_OF_MSGS = 5000;
-	public static final int NO_OF_SESSIONS = 50;
+	public static final int NO_OF_MSGS = 50;
+	public static final int NO_OF_SESSIONS = 2;
 	
 	static void multiSession(){
 		SMPPSession [] sessions = new SMPPSession[NO_OF_SESSIONS];

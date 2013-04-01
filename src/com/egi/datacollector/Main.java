@@ -4,12 +4,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -114,6 +117,26 @@ public class Main {
 	public static void main(String[] args) {
 		processId = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
 				
+		startInstance(args);
+		
+		Runtime.getRuntime().addShutdownHook(new Thread("datacollector.shutdown.service"){
+			
+			@Override
+			public void run(){stopInstance();}
+			
+		});
+						
+		setInstanceProperty();
+		log.info("========== DataCollector instance: " + processId + " is running in " + (Config.isClusteredModeEnabled() ? "clustered " : "standalone ") + "mode ============");	
+		
+	}
+	
+	public static String getProcessId(){
+		return processId;
+		
+	}
+	
+	public static void startInstance(String[] args){
 		try {
 			configFile = Config.getOption("c", args);
 		} catch (Exception e) {
@@ -190,57 +213,46 @@ public class Main {
 			
 		}
 		log.info("Components started ...");
-		
-		Runtime.getRuntime().addShutdownHook(new Thread("datacollector.shutdown.service"){
-			
-			@Override
-			public void run(){
-				log.warn("Shutdown signal detected");
-				log.info("========== Stopping DataCollector instance: " + processId + " ============");
-				_instanceLatch = new CountDownLatch(1);
-				ClusterListener.instance().stopListening();
-				try {
-					_instanceLatch.await(60, TimeUnit.SECONDS);
-				} catch (InterruptedException e) {
-					
-				}
-				if(listeners != null && !listeners.isEmpty()){
-					
-					_instanceLatch = new CountDownLatch(listeners.size());
-					for(Listener listener : listeners){
-						listener.stopListening();
-					}
-										
-					try {
-						
-						_instanceLatch.await(120, TimeUnit.SECONDS);
-					} catch (InterruptedException e1) {
-						
-					}
-				}
-								
-				ActorFramework.instance().stop();
-				RedisClient.shutdown();
-				
-				try {
-					
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					
-				}
-								
-				log.info("========== Stopped DataCollector instance: " + processId + " ============");
-			}
-		});
-						
-		setInstanceProperty();
-		log.info("========== DataCollector instance: " + processId + " is running ============");	
-		
 	}
 	
-	public static String getProcessId(){
-		return processId;
+	public static void stopInstance(){
+
+		log.warn("Shutdown signal detected");
+		log.info("========== Stopping DataCollector instance: " + processId + " ============");
+		_instanceLatch = new CountDownLatch(1);
+		ClusterListener.instance().stopListening();
+		try {
+			_instanceLatch.await(60, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			
+		}
+		if(listeners != null && !listeners.isEmpty()){
+			
+			_instanceLatch = new CountDownLatch(listeners.size());
+			for(Listener listener : listeners){
+				listener.stopListening();
+			}
+								
+			try {
+				
+				_instanceLatch.await(120, TimeUnit.SECONDS);
+			} catch (InterruptedException e1) {
+				
+			}
+		}
+						
+		ActorFramework.instance().stop();
+		RedisClient.shutdown();
 		
+		try {
+			
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			
+		}
+						
+		log.info("========== Stopped DataCollector instance: " + processId + " ============");
+	
 	}
 	
 	private static void setInstanceProperty(){
@@ -258,7 +270,28 @@ public class Main {
 		}
 		else{
 			log.info("This is a secondary instance");
+			
 		}
+	}
+	
+	/**
+	 * Changes the logger level
+	 * @param logLevel
+	 */
+	public static String changeLoggingLevel(String logLevel){
+		Level level = Level.toLevel(logLevel);
+		LogManager.getRootLogger().setLevel(level);
+				
+		try {
+			Method loggerMethod = log.getClass().getMethod(level.toString().toLowerCase(), Object.class);
+			if(loggerMethod != null){
+				loggerMethod.invoke(log, "* Logger level changed to: "+level+" *");
+				
+			}
+		} catch (Throwable e) {
+			
+		}
+		return LogManager.getRootLogger().getLevel().toString();
 	}
 	
 	/**
@@ -266,7 +299,7 @@ public class Main {
 	 * @param touchFile
 	 * @throws BootstrapException
 	 */
-	@Deprecated
+	
 	public static void startAnotherInstance(final File touchFile) throws BootstrapException {
 		
 		if(touchFile != null && touchFile.exists())

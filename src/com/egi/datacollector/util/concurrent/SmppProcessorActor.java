@@ -86,6 +86,12 @@ class SmppProcessorActor extends UntypedActor {
 					ClusterListener.instance().removeFromClusterJobMap(((EntryEvent) hazelcastEntry).getKey());
 				}
 			}
+			else if(hazelcastEntry instanceof ShortMessageValue){
+				SmppData job = new SmppData((ShortMessageValue) hazelcastEntry);
+				Processor processor = ProcessorFactory.getProcessor(job);
+				processor.process(job);
+				ClusterListener.instance().removeFromClusterJobMap(((EntryEvent) hazelcastEntry).getKey());
+			}
 						
 		}
 		
