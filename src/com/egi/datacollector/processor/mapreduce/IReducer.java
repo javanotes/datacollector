@@ -12,7 +12,7 @@ import java.util.Collection;
  * @param <K>	mapped key type
  * @param <V>	mapped value type
  */
-public interface IReducer<K extends Serializable, V extends Serializable> {
+public interface IReducer<K extends Serializable, V extends Serializable> extends Serializable{
 	
 	public KeyValue<K, V> reduceForKey(K key, Collection<V> values);
 		

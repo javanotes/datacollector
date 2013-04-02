@@ -36,7 +36,7 @@ import com.logica.smpp.pdu.ValueNotSetException;
  *
  * @author Logica Mobile Networks SMPP Open Source Team
  * @version 1.0, 21 Jun 2001
- * @see SMSCListener
+ * @see SMSCAdaptor
  * @see PDUProcessor
  * @see Connection
  * @see Receiver
@@ -51,8 +51,6 @@ implements Runnable
     private Connection connection;
     private long receiveTimeout = Data.RECEIVER_TIMEOUT;
     private boolean keepReceiving = true;
-    private boolean isReceiving = false;
-
     /**
      * Initialises the session with the connection the session
      * should communicate over.
@@ -93,38 +91,36 @@ implements Runnable
     {
         PDU pdu = null;
     
-        debug.enter(this,"SMSCSession run()");
-        debug.write("SMSCSession starting receiver");
+        //debug.enter(this,"SMSCSession run()");
+        //debug.write("SMSCSession starting receiver");
         receiver.start();
-        isReceiving = true;
         try {
             while (keepReceiving)
             {
                 try {
-                    debug.write("SMSCSession going to receive a PDU");
+                    //debug.write("SMSCSession going to receive a PDU");
                     pdu = receiver.receive(getReceiveTimeout());
                 } catch (Exception e){
-                    debug.write("SMSCSession caught exception receiving PDU " + e.getMessage());
+                    //debug.write("SMSCSession caught exception receiving PDU " + e.getMessage());
                 }
 
                 if (pdu != null) {
                     if (pdu.isRequest()) {
-                        debug.write("SMSCSession got request " + pdu.debugString());
+                        //debug.write("SMSCSession got request " + pdu.debugString());
                         pduProcessor.clientRequest((Request)pdu);
                     } else if (pdu.isResponse()) {
-                        debug.write("SMSCSession got response " + pdu.debugString());
+                        //debug.write("SMSCSession got response " + pdu.debugString());
                         pduProcessor.clientResponse((Response)pdu);
                     } else {
-                        debug.write("SMSCSession not reqest nor response => not doing anything.");
+                        //debug.write("SMSCSession not reqest nor response => not doing anything.");
                     }
                 }
             }
         } finally {
-            isReceiving = false;
         }
-        debug.write("SMSCSession stopping receiver");
+        //debug.write("SMSCSession stopping receiver");
         receiver.stop();
-        debug.write("SMSCSession exiting PDUProcessor");
+        //debug.write("SMSCSession exiting PDUProcessor");
         pduProcessor.exit();
         try {
             debug.write("SMSCSession closing connection");
@@ -132,7 +128,7 @@ implements Runnable
         } catch (IOException e) {
             event.write(e, "closing SMSCSession's connection.");
         }
-        debug.write("SMSCSession exiting run()");
+        //debug.write("SMSCSession exiting run()");
         debug.exit(this);
     }
 
@@ -143,9 +139,9 @@ implements Runnable
     public void send(PDU pdu)
     {
         try {
-            debug.write("SMSCSession going to send pdu over transmitter");
+            //debug.write("SMSCSession going to send pdu over transmitter");
             transmitter.send(pdu);
-            debug.write("SMSCSession pdu sent over transmitter");
+            //debug.write("SMSCSession pdu sent over transmitter");
         } catch (ValueNotSetException e) {
             event.write(e, "");
         } catch (IOException e) {

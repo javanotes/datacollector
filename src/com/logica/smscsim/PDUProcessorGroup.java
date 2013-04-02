@@ -10,7 +10,8 @@
  */
 package com.logica.smscsim;
 
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Simple container to hold set of somehow related processors.
@@ -21,14 +22,14 @@ import java.util.Vector;
  */
 public class PDUProcessorGroup
 {
-    private Vector processors = null;
+    private List<PDUProcessor> processors = null;
     
     /**
      * Initialises the underlying container.
      */
     public PDUProcessorGroup()
     {
-        processors = new Vector();
+        processors = new ArrayList<>();
     }
     
     /**
@@ -36,7 +37,7 @@ public class PDUProcessorGroup
      */
     public PDUProcessorGroup(int initSize)
     {
-        processors = new Vector(initSize);
+        processors = new ArrayList<>(initSize);
     }
     
     /**

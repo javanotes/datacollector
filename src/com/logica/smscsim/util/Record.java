@@ -10,8 +10,8 @@
  */
 package com.logica.smscsim.util;
 
-import java.util.List;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.ListIterator;
 
 /**
@@ -31,7 +31,7 @@ public class Record
     /**
      * The list of the attributes of this record.
      */
-    private List attributes = new LinkedList();
+    private List<Attribute> attributes = new LinkedList<>();
     
     /**
      * Only default constructor present -- the record is empty by default
@@ -83,9 +83,9 @@ public class Record
     public synchronized Attribute get(String name)
     {
         Attribute attr;
-        ListIterator iter = attributes.listIterator(0);
+        ListIterator<Attribute> iter = attributes.listIterator(0);
         while (iter.hasNext()) {
-            attr = (Attribute)iter.next();
+            attr = iter.next();
             if (attr.nameEquals(name)) {
                 return attr;
             }

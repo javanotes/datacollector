@@ -10,18 +10,15 @@
  */
 package com.logica.smscsim.util;
 
-import java.util.List;
-import java.util.LinkedList;
-import java.util.ListIterator;
-
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
 
 /**
  * Represents table of <code>Record</code>s. Users can add,
@@ -48,7 +45,7 @@ public class Table
     /**
      * Holds all records currently present in the table.
      */
-    private List records;
+    private List<Record> records;
 
     /**
      * The name (path) of the file to load the records from.
@@ -64,7 +61,7 @@ public class Table
     public Table()
     {
         fileName = null;
-        records = new LinkedList();
+        records = new LinkedList<>();
     }
 
     /**
@@ -149,9 +146,9 @@ public class Table
     {
         Record current;
         String currKeyValue;
-        ListIterator iter = records.listIterator(0);
+        ListIterator<Record> iter = records.listIterator(0);
         while (iter.hasNext()) {
-            current = (Record)iter.next();
+            current = iter.next();
             currKeyValue = current.getValue(name);
             if ((currKeyValue != null) && (currKeyValue.equals(value))) {
                 return current;
@@ -216,7 +213,7 @@ public class Table
     throws FileNotFoundException,IOException
     {
         FileInputStream is = new FileInputStream(fileName);
-        records = new LinkedList(); // clear current list of records
+        records.clear(); // clear current list of records
         read(is);
         is.close();
     }

@@ -16,6 +16,7 @@ import org.apache.log4j.Logger;
 
 import com.egi.datacollector.processor.Data;
 import com.egi.datacollector.processor.Processor;
+import com.egi.datacollector.util.Config;
 import com.egi.datacollector.util.Utilities;
 import com.egi.datacollector.util.concurrent.ActorFramework;
 import com.egi.datacollector.util.exception.ProcessorException;
@@ -31,7 +32,7 @@ public class FileProcessor extends Processor {
 		recordBuffer.delete(0, recordBuffer.length());
 		recordLength = 0;
 	}
-	private boolean useMapReduce = false;
+	
 	private int recordLength = 0;
 	
 	/**
@@ -45,12 +46,12 @@ public class FileProcessor extends Processor {
 			switch (nextChar) {
 			case '\r':
 				
-				ActorFramework.instance().submitFileRecordToProcess(new RecordData(recordBuffer.toString()));
+				//ActorFramework.instance().submitFileRecordToProcess(new RecordData(recordBuffer.toString()));
 				recordBuffer.delete(0, recordLength);
 				recordLength = 0;
 				break;
 			case '\n':
-				ActorFramework.instance().submitFileRecordToProcess(new RecordData(recordBuffer.toString()));
+				//ActorFramework.instance().submitFileRecordToProcess(new RecordData(recordBuffer.toString()));
 				recordBuffer.delete(0, recordLength);
 				recordLength = 0;
 				break;
@@ -89,87 +90,92 @@ public class FileProcessor extends Processor {
 	
 	private void usingMappedIO(String fileName) throws ProcessorException{
 		/*
-		 * TODO consider implementing the reading and writing both in multi-threaded
+		 * TODO consider implementing the reading and writing both using multi-threaded
 		 */
 		if(Utilities.isNullOrBlank(fileName)){
 			throw new ProcessorException("File name is null");
 		}
 		log.info("Starting transforming file: " + fileName);
 		FileChannel channel = null;
-		MappedByteBuffer buffer = null;
+		MappedByteBuffer byteBuffer = null;
 		long start;
-		try {
+		
+			
 			start = System.currentTimeMillis();
-			channel = new FileInputStream(fileName).getChannel();
-			buffer = channel.map(MapMode.READ_ONLY, 0L, channel.size());
+			try {
+				channel = new FileInputStream(fileName).getChannel();
+				byteBuffer = channel.map(MapMode.READ_ONLY, 0L, channel.size());
+			} catch (IOException e) {
+				log.error(e.getMessage(), e);
+				throw new ProcessorException(e);
+			}
 			
-			final BlockingQueue<byte []> stream = new LinkedBlockingQueue<>();
-			
-			Thread _localThread = new Thread("datacollector.file.reader"){
+			if (byteBuffer != null) {
 				
-				public void run(){
-					while (true) {
-						byte [] nextDataBlock = null;
-						try {
-							nextDataBlock = stream.poll(1, TimeUnit.SECONDS);
-						} catch (InterruptedException e) {
+				final BlockingQueue<byte[]> stream = new LinkedBlockingQueue<>();
+				Thread _localThread = new Thread("datacollector.file.reader") {
 
-						}
-						if(nextDataBlock == null){
-							break;
-						}
-						else{
-							if(useMapReduce)
-								processMapReduce(nextDataBlock);
-							else
-								processParallel(nextDataBlock);
+					public void run() {
+						while (true) {
+							byte[] nextDataBlock = null;
+							try {
+								nextDataBlock = stream.poll(1, TimeUnit.SECONDS);
+							} catch (InterruptedException e) {
+
+							}
+							if (nextDataBlock == null) {
+								break;
+							} else {
+								if (Config.useMapReduceFunction())
+									processMapReduce(nextDataBlock);
+								else
+									processParallel(nextDataBlock);
+							}
 						}
 					}
+				};
+				_localThread.setDaemon(true);
+				_localThread.start();
+				
+				byte[] nextBlock = null;
+				
+				while (byteBuffer.hasRemaining()) {
+					if (byteBuffer.remaining() < BLOCK_SIZE)
+						nextBlock = new byte[byteBuffer.remaining()];
+					else
+						nextBlock = new byte[BLOCK_SIZE];
+					byteBuffer.get(nextBlock);
+
+					try {
+						stream.put(nextBlock);
+					} catch (InterruptedException e) {
+						log.warn(e.getMessage());
+					}
+
 				}
-			};
-			_localThread.setDaemon(true);
-			_localThread.start();
-					
-			byte [] nextBlock = null;
-			
-			while(buffer.hasRemaining()){
-				if(buffer.remaining() < BLOCK_SIZE)
-					nextBlock = new byte [buffer.remaining()];
-				else
-					nextBlock = new byte [BLOCK_SIZE];
-				buffer.get(nextBlock);
+				
+				if (channel != null) {
+					try {
+						channel.close();
+					} catch (IOException e) {
+						log.warn(e.getMessage());
+					}
+				}
+				
+				byteBuffer.clear();
+				byteBuffer = null;
+				System.gc();
 				
 				try {
-					stream.put(nextBlock);
+					_localThread.join();
 				} catch (InterruptedException e) {
 					log.warn(e.getMessage());
 				}
 				
+				log.debug("Time taken: " + (System.currentTimeMillis() - start));
 			}
-						
-			try {
-				_localThread.join();
-			} catch (InterruptedException e) {
-				log.warn(e.getMessage());
-			}
-			log.debug("Time taken: " + (System.currentTimeMillis() - start));
-		} catch (FileNotFoundException e) {
-			log.error(e.getMessage(), e);
-			throw new ProcessorException(e);
-		} catch (IOException e) {
-			log.error(e.getMessage(), e);
-			throw new ProcessorException(e);
-		}
-		finally{
-			if(channel != null){
-				try {
-					channel.close();
-				} catch (IOException e) {
-					log.warn(e.getMessage());
-				}
-			}
-			buffer = null;
-		}
+		
+		
 	}
 	
 	private void usingBuffReader(String fileName) throws ProcessorException{
@@ -189,7 +195,7 @@ public class FileProcessor extends Processor {
 			String nextLine = "";
 			while((nextLine = buffer.readLine()) != null){
 				record = new RecordData(nextLine);
-				if(useMapReduce){
+				if(Config.useMapReduceFunction()){
 					//do map reduce
 				}
 				else{
@@ -241,14 +247,6 @@ public class FileProcessor extends Processor {
 			throw new ProcessorException("Invalid job type: "+job.getClass().getName());
 		}
 		return true;
-	}
-
-	public boolean usingMapReduce() {
-		return useMapReduce;
-	}
-
-	public void useMapReduce(boolean useMapReduce) {
-		this.useMapReduce = useMapReduce;
 	}
 
 }

@@ -10,15 +10,14 @@
  */
 package com.logica.smscsim.util;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
 import com.logica.smpp.SmppObject;
 import com.logica.smpp.debug.Debug;
-import com.logica.smpp.debug.Event;
 
 /**
  * Implements the <code>TableParser</code>. The expected format of the file
@@ -95,8 +94,6 @@ public class BasicTableParser implements TableParser
     boolean pendingRecord = false;
     
     private Debug debug = SmppObject.getDebug();
-    private Event event = SmppObject.getEvent();
-
     /**
      * This constructor passes to the parser a table to work on.
      */

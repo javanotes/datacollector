@@ -6,8 +6,8 @@ import akka.actor.UntypedActor;
 
 import com.egi.datacollector.processor.mapreduce.IReducer;
 import com.egi.datacollector.processor.mapreduce.KeyValue;
-import com.egi.datacollector.processor.mapreduce.pojo.ReduceMsg;
-import com.egi.datacollector.processor.mapreduce.pojo.ReducedMsg;
+import com.egi.datacollector.processor.mapreduce.messages.ReduceMsg;
+import com.egi.datacollector.processor.mapreduce.messages.ReducedMsg;
 
 public class ReduceActor<K extends Serializable, V extends Serializable> extends UntypedActor {
 	

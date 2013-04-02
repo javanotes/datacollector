@@ -8,6 +8,10 @@ import com.egi.datacollector.processor.Data;
 
 public class FileData implements Data {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2835493968346669382L;
 	private final List<String> fileNames = Collections.synchronizedList(new ArrayList<String>());
 	
 	public void addFile(String file){

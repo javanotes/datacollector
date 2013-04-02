@@ -29,7 +29,6 @@ import com.logica.smpp.pdu.SubmitMultiSMResp;
 import com.logica.smpp.pdu.SubmitSM;
 import com.logica.smpp.pdu.SubmitSMResp;
 import com.logica.smpp.pdu.WrongLengthOfStringException;
-import com.logica.smscsim.util.Record;
 import com.logica.smscsim.util.Table;
 
 /**
@@ -76,7 +75,8 @@ public class SimulatorPDUProcessor extends PDUProcessor
      * The table with system id's and passwords for authenticating
      * of the bounding ESMEs.
      */
-    private Table users = null;
+    @SuppressWarnings("unused")
+	private Table users = null;
 
     /**
      * Indicates if the bound has passed.
@@ -107,12 +107,14 @@ public class SimulatorPDUProcessor extends PDUProcessor
     /**
      * The name of attribute which contains the system id of ESME.
      */
-    private static final String SYSTEM_ID_ATTR = "name";
+    @SuppressWarnings("unused")
+	private static final String SYSTEM_ID_ATTR = "name";
 
     /**
      * The name of attribute which conatins password of ESME.
      */
-    private static final String PASSWORD_ATTR = "password";
+    @SuppressWarnings("unused")
+	private static final String PASSWORD_ATTR = "password";
 
     private Debug debug = SmppObject.getDebug();
     private Event event = SmppObject.getEvent();

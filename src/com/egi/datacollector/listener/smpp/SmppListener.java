@@ -16,7 +16,7 @@ import com.egi.datacollector.util.concurrent.ActorFramework;
 import com.logica.smpp.pdu.SubmitSM;
 import com.logica.smscsim.DeliveryInfoSender;
 import com.logica.smscsim.PDUProcessorGroup;
-import com.logica.smscsim.SMSCListener;
+import com.logica.smscsim.SMSCAdaptor;
 import com.logica.smscsim.SMSCSession;
 import com.logica.smscsim.ShortMessageStore;
 import com.logica.smscsim.SimulatorPDUProcessor;
@@ -27,7 +27,7 @@ public class SmppListener extends Listener implements Runnable {
 	//private ServerSocketChannel server = null;
 	private static final Logger log = Logger.getLogger(SmppListener.class);
 	
-	private SMSCListener smscListener = null;
+	private SMSCAdaptor gateway = null;
     private SimulatorPDUProcessorFactory factory = null;
     private PDUProcessorGroup processors = null;
     private ShortMessageStore messageStore = null;
@@ -47,8 +47,10 @@ public class SmppListener extends Listener implements Runnable {
     	public void submit(SubmitSM message, String messageId, String systemId)
 		{
 			
-			SmppData sms = new SmppData(message.getSourceAddr().getAddress(), message.getDestAddr().getAddress(), message.getShortMessage());
-			
+			SmppData sms = new SmppData(message.getSourceAddr().getAddress(), 
+										message.getDestAddr().getAddress(), 
+										message.getShortMessage());
+			sms.setSmscGenId(messageId);
 			ActorFramework.instance().submitDataToDistributedMap(sms);
 		}
     }
@@ -59,7 +61,7 @@ public class SmppListener extends Listener implements Runnable {
 			if (lock.isLocked()) {
 				try {
 					try {
-						smscListener.start();
+						gateway.start();
 						state.set(State.Runnable);
 					} catch (BindException e) {
 						state.set(State.Init);
@@ -71,7 +73,7 @@ public class SmppListener extends Listener implements Runnable {
 							} catch (InterruptedException e1) {
 							}
 							try {
-								smscListener.start();
+								gateway.start();
 								state.set(State.Runnable);
 								return;
 							} catch (BindException e1) {
@@ -93,7 +95,7 @@ public class SmppListener extends Listener implements Runnable {
     	else{
     		
 			try {
-				smscListener.start();
+				gateway.start();
 				state.set(State.Runnable);
 			} catch (BindException e) {
 				state.set(State.Init);
@@ -110,16 +112,19 @@ public class SmppListener extends Listener implements Runnable {
     
     
 	private void init(){
-		smscListener = new SMSCListener(Config.getSMPPListenPort(), true);
+		gateway = new SMSCAdaptor(Config.getSMPPListenPort(), true);
 		
 		processors = new PDUProcessorGroup();
         messageStore = new SmppMessageStore();
         deliveryInfoSender = new DeliveryInfoSender();
         deliveryInfoSender.start();
         
-        //authentication is disabled        
+        /*								*
+         * authentication is disabled   *
+         * 								*     
+         */
         factory = new SimulatorPDUProcessorFactory(processors, messageStore, deliveryInfoSender, null);
-        smscListener.setPDUProcessorFactory(factory);
+        gateway.setPDUProcessorFactory(factory);
         
         try {
 			socketListen();
@@ -182,7 +187,7 @@ public class SmppListener extends Listener implements Runnable {
 	}
 	
 	private void disconnect(){
-		if (smscListener != null) {
+		if (gateway != null) {
             
             synchronized (processors) {
                 int procCount = processors.count();
@@ -197,14 +202,14 @@ public class SmppListener extends Listener implements Runnable {
                 }
             }
             try {
-				smscListener.stop();
+				gateway.stop();
 			} catch (Throwable e) {
 				//catching all since a null pointer will be thrown
 				//in a clustered environment. this is because the ServerSocket
 				//is wrapped over a library class and it remains null on bind exception
 				//can't help, this is how Logica has implemented their smpp library :)
 			}
-            smscListener = null;
+            gateway = null;
             if (deliveryInfoSender!=null) {
                 deliveryInfoSender.stop();
                 deliveryInfoSender = null;

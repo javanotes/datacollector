@@ -12,7 +12,7 @@ import java.util.Collection;
  * @param <K>	mapped key type
  * @param <V>	mapped value type
  */
-public interface IMapper<X,K extends Serializable, V extends Serializable> {
+public interface IMapper<X,K extends Serializable, V extends Serializable> extends Serializable{
 	
 	public Collection<KeyValue<K, V>> mapToKeyValue(X each);
 	

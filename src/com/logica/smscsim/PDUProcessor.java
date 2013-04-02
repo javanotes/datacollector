@@ -27,7 +27,7 @@ import com.logica.smpp.pdu.Response;
  * @version 1.0, 21 Jun 2001
  * @see PDUProcessorFactory
  * @see SMSCSession
- * @see SMSCListener
+ * @see SMSCAdaptor
  */
 public abstract class PDUProcessor
 {

@@ -22,7 +22,7 @@ package com.logica.smscsim;
  * @author Logica Mobile Networks SMPP Open Source Team
  * @version 1.0, 21 Jun 2001
  * @see PDUProcessor
- * @see SMSCListener
+ * @see SMSCAdaptor
  * @see SMSCSession
  */
 public interface PDUProcessorFactory

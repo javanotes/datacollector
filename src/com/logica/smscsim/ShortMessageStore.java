@@ -13,10 +13,10 @@ package com.logica.smscsim;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import com.egi.datacollector.util.concurrent.ActorFramework;
 import com.logica.smpp.pdu.SubmitSM;
 
 /**
+ * 
  * Class <code>ShortMessageStore</code> is used to store the sms's sent by
  * a client to the smsc. Provides method to store the message, cancel
  * the message and replace it as well as methods for printing of all
@@ -26,9 +26,7 @@ import com.logica.smpp.pdu.SubmitSM;
  * @version 1.1, 20 Sep 2001
  * @see ShortMessageValue
  * 
- * ++++ ++++ +++++
- * Modified to work for message submit only
- * +++++++++++++++
+ * 
  */
 
 /*
@@ -107,7 +105,8 @@ public class ShortMessageStore
     /**
      * Prints all messages currently stored in the message store.
      */
-    public synchronized void print()
+    @SuppressWarnings("rawtypes")
+	public synchronized void print()
     {
         if (messages.size() != 0) {
             ShortMessageValue sMV;

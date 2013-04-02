@@ -244,7 +244,7 @@ public class Config {
 	}
 
 	public static boolean useMemoryMappedIO() {
-		return "true".equalsIgnoreCase(getProperty("datacollector.processor.file.mem_map_io"));
+		return "true".equalsIgnoreCase(getProperty("datacollector.processor.file.use.mem_map_io"));
 	}
 
 	public static long getRedisTimeToIdle() {
@@ -306,5 +306,9 @@ public class Config {
 	public static String sshHost() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public static boolean useMapReduceFunction() {
+		return "true".equals(getProperty("datacollector.processor.file.use.mapreduce"));
 	}
 }

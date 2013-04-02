@@ -26,12 +26,25 @@ public class SmppData implements Data {
 
 	private final String destination;
 	private final String message;
+	private String smscGenId;
 	
-	public SmppData(String sourceAddress, String destnAddress, String messageContent){
+	public String getSmscGenId() {
+		return smscGenId;
+	}
+
+	public void setSmscGenId(String smscGenId) {
+		this.smscGenId = smscGenId;
+	}
+
+	public SmppData(String sourceAddress, 
+					String destnAddress, 
+					String messageContent
+					){
 		
 		source = sourceAddress;
 		destination = destnAddress;
 		message = messageContent;
+		
 	}
 
 	@Override
@@ -41,6 +54,10 @@ public class SmppData implements Data {
 
 	public byte [] getBytes() {
 		return bytes;
+	}
+
+	public String getSmscId() {
+		return smscGenId;
 	}
 		
 

@@ -7,8 +7,8 @@ import akka.actor.UntypedActor;
 
 import com.egi.datacollector.processor.mapreduce.IMapper;
 import com.egi.datacollector.processor.mapreduce.KeyValue;
-import com.egi.datacollector.processor.mapreduce.pojo.MapMsg;
-import com.egi.datacollector.processor.mapreduce.pojo.MappedMsg;
+import com.egi.datacollector.processor.mapreduce.messages.MapMsg;
+import com.egi.datacollector.processor.mapreduce.messages.MappedMsg;
 
 public class MapActor<X, K extends Serializable, V extends Serializable> extends UntypedActor {
 	
