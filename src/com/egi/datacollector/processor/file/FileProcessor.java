@@ -31,9 +31,14 @@ public class FileProcessor extends Processor {
 		recordBuffer.delete(0, recordBuffer.length());
 		recordLength = 0;
 	}
-	
+	private boolean useMapReduce = false;
 	private int recordLength = 0;
-	private void make(byte[] block){
+	
+	/**
+	 * TODO
+	 * @param block
+	 */
+	private void processMapReduce(byte[] block){
 		
 		for(byte b : block) {
 			char nextChar = (char)b;
@@ -57,8 +62,35 @@ public class FileProcessor extends Processor {
 		}
 	}
 	
-	private void usingMappedIO(String fileName) throws ProcessorException{
+	private void processParallel(byte[] block){
 		
+		for(byte b : block) {
+			char nextChar = (char)b;
+			switch (nextChar) {
+			case '\r':
+				
+				ActorFramework.instance().submitFileRecordToProcess(new RecordData(recordBuffer.toString()));
+				recordBuffer.delete(0, recordLength);
+				recordLength = 0;
+				break;
+			case '\n':
+				ActorFramework.instance().submitFileRecordToProcess(new RecordData(recordBuffer.toString()));
+				recordBuffer.delete(0, recordLength);
+				recordLength = 0;
+				break;
+			default:
+				recordBuffer.append(nextChar);
+				recordLength++;
+				break;
+			}
+		}
+	}
+	
+	
+	private void usingMappedIO(String fileName) throws ProcessorException{
+		/*
+		 * TODO consider implementing the reading and writing both in multi-threaded
+		 */
 		if(Utilities.isNullOrBlank(fileName)){
 			throw new ProcessorException("File name is null");
 		}
@@ -74,19 +106,23 @@ public class FileProcessor extends Processor {
 			final BlockingQueue<byte []> stream = new LinkedBlockingQueue<>();
 			
 			Thread _localThread = new Thread("datacollector.file.reader"){
+				
 				public void run(){
 					while (true) {
-						byte [] next = null;
+						byte [] nextDataBlock = null;
 						try {
-							next = stream.poll(1, TimeUnit.SECONDS);
+							nextDataBlock = stream.poll(1, TimeUnit.SECONDS);
 						} catch (InterruptedException e) {
 
 						}
-						if(next == null){
+						if(nextDataBlock == null){
 							break;
 						}
 						else{
-							make(next);
+							if(useMapReduce)
+								processMapReduce(nextDataBlock);
+							else
+								processParallel(nextDataBlock);
 						}
 					}
 				}
@@ -94,16 +130,17 @@ public class FileProcessor extends Processor {
 			_localThread.setDaemon(true);
 			_localThread.start();
 					
-			byte [] block = null;
+			byte [] nextBlock = null;
+			
 			while(buffer.hasRemaining()){
 				if(buffer.remaining() < BLOCK_SIZE)
-					block = new byte [buffer.remaining()];
+					nextBlock = new byte [buffer.remaining()];
 				else
-					block = new byte [BLOCK_SIZE];
-				buffer.get(block);
+					nextBlock = new byte [BLOCK_SIZE];
+				buffer.get(nextBlock);
 				
 				try {
-					stream.put(block);
+					stream.put(nextBlock);
 				} catch (InterruptedException e) {
 					log.warn(e.getMessage());
 				}
@@ -152,7 +189,13 @@ public class FileProcessor extends Processor {
 			String nextLine = "";
 			while((nextLine = buffer.readLine()) != null){
 				record = new RecordData(nextLine);
-				ActorFramework.instance().submitFileRecordToProcess(record);
+				if(useMapReduce){
+					//do map reduce
+				}
+				else{
+					ActorFramework.instance().submitFileRecordToProcess(record);
+				}
+				
 			}
 			log.debug("Time taken: " + (System.currentTimeMillis() - start));
 		} catch (FileNotFoundException e) {
@@ -198,6 +241,14 @@ public class FileProcessor extends Processor {
 			throw new ProcessorException("Invalid job type: "+job.getClass().getName());
 		}
 		return true;
+	}
+
+	public boolean usingMapReduce() {
+		return useMapReduce;
+	}
+
+	public void useMapReduce(boolean useMapReduce) {
+		this.useMapReduce = useMapReduce;
 	}
 
 }

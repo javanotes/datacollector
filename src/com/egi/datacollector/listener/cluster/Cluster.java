@@ -5,7 +5,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
-import com.egi.datacollector.startup.Main;
+import com.egi.datacollector.processor.smpp.SmppData;
+import com.egi.datacollector.server.Main;
 import com.egi.datacollector.util.Config;
 import com.egi.datacollector.util.concurrent.ActorFramework;
 import com.egi.datacollector.util.exception.GeneralException;
@@ -47,6 +48,7 @@ class Cluster {
 	public static final String INSTANCE_STARTUP_Q = "INSTANCE_STARTUP_Q";
 	
 	public static final String PERSISTENT_JOB_MAP = "distributableJobs";
+	public static final String MAPREDUCE_JOB_MAP = "mapReduceJobs";
 	
 	public static final String CLUSTER_UNIQUE_NUMBER_GEN = "uniqNumGen";
 	
@@ -195,19 +197,13 @@ class Cluster {
 		
 	}
 	
-	void remove(Long key){
+	void remove(String distributedMapName, Long key){
 		if(isRunning()){
-			hazelcast.getMap(PERSISTENT_JOB_MAP).remove(key);
+			hazelcast.getMap(distributedMapName).remove(key);
 			releaseKey(key);
 		}
 	}
-	void put(Object val){
-		if(isRunning()){
-			Long key = acquireKey();
-			hazelcast.getMap(PERSISTENT_JOB_MAP).put(key, val);
-		}
-	}
-	
+		
 	void put(Object key, Object val){
 		if(isRunning()){
 			hazelcast.getMap(PERSISTENT_JOB_MAP).put(key, val);
@@ -322,12 +318,25 @@ class Cluster {
 		}
 	}
 			
-	public void stop(){
+	void stop(){
 		if(hazelcast != null){
 			broadcastPlannedShutdown(Main.getProcessId());
 			hazelcast.getLifecycleService().shutdown();
 		}
 		
+		
+	}
+
+	void put(byte[] dataBytes) {
+		// do nothing
+		
+	}
+
+	void put(SmppData smppData) {
+		if(isRunning()){
+			Long key = acquireKey();
+			hazelcast.getMap(PERSISTENT_JOB_MAP).put(key, smppData);
+		}
 		
 	}
 

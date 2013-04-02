@@ -1,11 +1,9 @@
 package com.egi.datacollector.util.concurrent;
 
-import org.apache.log4j.Logger;
+import akka.actor.UntypedActor;
 
 import com.egi.datacollector.listener.cluster.ClusterListener;
-import com.logica.smscsim.ShortMessageValue;
-
-import akka.actor.UntypedActor;
+import com.egi.datacollector.processor.smpp.SmppData;
 
 /**
  * This will run in the primary only
@@ -14,21 +12,14 @@ import akka.actor.UntypedActor;
  */
 class DistributorActor extends UntypedActor {
 	
-	private static final Logger log = Logger.getLogger(DistributorActor.class);
-
-	@SuppressWarnings("deprecation")
+		
 	@Override
 	public void onReceive(Object socketBytes) throws Exception {
-		if(socketBytes instanceof byte[]){
-			//this is not used
-			ClusterListener.instance().addToClusterJobMap((byte[]) socketBytes);
-			log.debug("Got a new data to set to distributed map");
-			
+		if(socketBytes instanceof SmppData){
+			ClusterListener.instance().addToDistributableJobsMap((SmppData) socketBytes);
 		}
-		else if(socketBytes instanceof ShortMessageValue){
-			ClusterListener.instance().addToClusterJobMap((ShortMessageValue) socketBytes);
-			
-		}
+		else
+			unhandled(socketBytes);
 
 	}
 

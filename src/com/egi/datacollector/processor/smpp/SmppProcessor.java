@@ -34,10 +34,10 @@ public class SmppProcessor extends Processor {
 			
 			try {
 				
-				if(smppPdu.getMessageBody() != null){
+				if(smppPdu.getMessage() != null){
 					
 					//now process it to database
-					log.info("Short message text: " + smppPdu.getMessageBody().getShortMessage());
+					log.info("Short message text: " + smppPdu.getMessage());
 					return true;
 				}
 				else{

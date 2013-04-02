@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 
 import scala.concurrent.duration.Duration;
-
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -13,8 +12,8 @@ import akka.actor.Props;
 import akka.actor.UntypedActorFactory;
 
 import com.egi.datacollector.processor.file.RecordData;
+import com.egi.datacollector.processor.smpp.SmppData;
 import com.hazelcast.core.EntryEvent;
-import com.logica.smscsim.ShortMessageValue;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 /**
@@ -85,15 +84,7 @@ public class ActorFramework {
 		}).withDispatcher("datacollector-durable"));
 	}
 	
-	/**
-	 * 
-	 * @param pduBytes
-	 */
-	
-	public void submitDataToDistributedMap(ShortMessageValue sms){
-		smppDistributor.tell(sms, akka.guardian());
-	}
-	
+		
 	public void submitDataToDistributedMap(byte [] pduBytes){
 		smppDistributor.tell(pduBytes, akka.guardian());
 	}
@@ -147,6 +138,11 @@ public class ActorFramework {
 			}
 		}
 		return _singleton;
+	}
+
+	public void submitDataToDistributedMap(SmppData sms) {
+		smppDistributor.tell(sms, akka.guardian());
+		
 	}
 
 }

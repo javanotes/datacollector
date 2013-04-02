@@ -1,5 +1,6 @@
 package com.egi.datacollector.util.concurrent.mapreduce;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -26,7 +27,7 @@ import com.egi.datacollector.processor.mapreduce.pojo.MappedMsg;
 import com.egi.datacollector.processor.mapreduce.pojo.ReduceMsg;
 import com.egi.datacollector.processor.mapreduce.pojo.ReducedMsg;
 
-public class MapReduceMasterActor<X, K, V> extends UntypedActor {
+public class MapReduceMasterActor<X, K extends Serializable, V extends Serializable> extends UntypedActor {
 	
 	private final ActorRef mapRouter;
 	private final ActorRef reduceRouter;

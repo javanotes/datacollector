@@ -1,5 +1,6 @@
 package com.egi.datacollector.util.concurrent.mapreduce;
 
+import java.io.Serializable;
 import java.util.Collection;
 
 import akka.actor.UntypedActor;
@@ -9,7 +10,7 @@ import com.egi.datacollector.processor.mapreduce.KeyValue;
 import com.egi.datacollector.processor.mapreduce.pojo.MapMsg;
 import com.egi.datacollector.processor.mapreduce.pojo.MappedMsg;
 
-public class MapActor<X, K, V> extends UntypedActor {
+public class MapActor<X, K extends Serializable, V extends Serializable> extends UntypedActor {
 	
 	private final IMapper<X, K, V> mapFunction;
 	

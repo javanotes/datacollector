@@ -1,17 +1,37 @@
 package com.egi.datacollector.processor.smpp;
 
 import com.egi.datacollector.processor.Data;
-import com.logica.smscsim.ShortMessageValue;
 
 public class SmppData implements Data {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7070308608498855809L;
+
 	private byte [] bytes;
 	
-	private final ShortMessageValue messageBody;
+	private final String source;
+	public String getSource() {
+		return source;
+	}
+
+	public String getDestination() {
+		return destination;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	private final String destination;
+	private final String message;
 	
-	public SmppData(ShortMessageValue messageBody){
+	public SmppData(String sourceAddress, String destnAddress, String messageContent){
 		
-		this.messageBody = messageBody;
+		source = sourceAddress;
+		destination = destnAddress;
+		message = messageContent;
 	}
 
 	@Override
@@ -22,11 +42,6 @@ public class SmppData implements Data {
 	public byte [] getBytes() {
 		return bytes;
 	}
-
-	public ShortMessageValue getMessageBody() {
-		return messageBody;
-	}
-
-	
+		
 
 }

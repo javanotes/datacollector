@@ -16,7 +16,8 @@ import org.apache.log4j.Logger;
 
 import com.egi.datacollector.listener.Listener;
 import com.egi.datacollector.listener.ListenerState.State;
-import com.egi.datacollector.startup.Main;
+import com.egi.datacollector.processor.smpp.SmppData;
+import com.egi.datacollector.server.Main;
 import com.egi.datacollector.util.Config;
 import com.egi.datacollector.util.concurrent.ActorFramework;
 import com.hazelcast.core.EntryEvent;
@@ -25,7 +26,6 @@ import com.hazelcast.core.MembershipEvent;
 import com.hazelcast.core.MembershipListener;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
-import com.logica.smscsim.ShortMessageValue;
 
 /**
  * This is the class responsible for maintaining the peer to peer clustering using Hazelcast. 
@@ -180,23 +180,23 @@ public class ClusterListener extends Listener implements Runnable {
 		
 	}
 	
-	public void removeFromClusterJobMap(Object entryKey){
+	public void removeFromDistributableJobsMap(Long entryKey){
 		if(entryKey != null){
-			cluster.remove((Long) entryKey);
+			cluster.remove(Cluster.PERSISTENT_JOB_MAP, entryKey);
 		}
 	}
 	
-	public void addToClusterJobMap(ShortMessageValue sms){
-		log.debug("Got a new sms to set to distributed map: " + sms.getMessageId());
-		//cluster.put(sms.getMessageId(), sms);
-		cluster.put(sms);
-	}
-	@Deprecated
-	public void addToClusterJobMap(byte [] dataBytes){
-		
-		cluster.put(dataBytes);
+	public void removeFromMapReduceJobsMap(Long entryKey){
+		if(entryKey != null){
+			cluster.remove(Cluster.MAPREDUCE_JOB_MAP, entryKey);
+		}
 	}
 	
+	public void addToMapReduceJobsMap(){
+		
+	}
+	
+		
 	/**
 	 * 
 	 * @author esutdal
@@ -292,12 +292,40 @@ public class ClusterListener extends Listener implements Runnable {
 		
 	}
 	
+	private class MapReduceJobsEntryListener implements EntryListener<Object, Object>{
+
+		@Override
+		public void entryAdded(EntryEvent<Object, Object> arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void entryEvicted(EntryEvent<Object, Object> arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void entryRemoved(EntryEvent<Object, Object> arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void entryUpdated(EntryEvent<Object, Object> arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
+	
 	/**
 	 * A local distributed map listener
 	 * @author esutdal
 	 *
 	 */
-	private class LocalMapListener implements EntryListener<Object, Object>{
+	private class DistributableJobsEntryListener implements EntryListener<Object, Object>{
 
 		@Override
 		public void entryAdded(EntryEvent<Object, Object> entry) {
@@ -332,7 +360,7 @@ public class ClusterListener extends Listener implements Runnable {
 		if(cluster == null){
 			try {
 				cluster = new Cluster();
-				cluster.init(new InstanceListener(), new TopicListener(), new LocalMapListener());
+				cluster.init(new InstanceListener(), new TopicListener(), new DistributableJobsEntryListener());
 				
 			} catch (FileNotFoundException e) {
 				log.fatal("Unable to read hazelcast config. Cluster listener not running!", e);
@@ -347,6 +375,12 @@ public class ClusterListener extends Listener implements Runnable {
 	@Override
 	public boolean isListening() {
 		return state.get() == State.Running;
+	}
+
+	public void addToDistributableJobsMap(SmppData smppData) {
+		
+		cluster.put(smppData);
+		
 	}
 
 }

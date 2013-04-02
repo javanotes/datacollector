@@ -21,7 +21,6 @@ import com.egi.datacollector.processor.ProcessorFactory;
 import com.egi.datacollector.processor.smpp.SmppData;
 import com.hazelcast.core.EntryEvent;
 import com.logica.smpp.pdu.PDUException;
-import com.logica.smscsim.ShortMessageValue;
 
 /**
  * A retry implemented actor for executing processing
@@ -79,20 +78,14 @@ class SmppProcessorActor extends UntypedActor {
 		public void onReceive(Object hazelcastEntry) throws Exception {
 			if(hazelcastEntry instanceof EntryEvent){
 				Object data = ((EntryEvent) hazelcastEntry).getValue();
-				if(data instanceof ShortMessageValue){
-					SmppData job = new SmppData((ShortMessageValue) data);
+				if(data instanceof SmppData){
+					SmppData job = ((SmppData) data);
 					Processor processor = ProcessorFactory.getProcessor(job);
 					processor.process(job);
-					ClusterListener.instance().removeFromClusterJobMap(((EntryEvent) hazelcastEntry).getKey());
+					ClusterListener.instance().removeFromDistributableJobsMap((Long) ((EntryEvent) hazelcastEntry).getKey());
 				}
 			}
-			else if(hazelcastEntry instanceof ShortMessageValue){
-				SmppData job = new SmppData((ShortMessageValue) hazelcastEntry);
-				Processor processor = ProcessorFactory.getProcessor(job);
-				processor.process(job);
-				ClusterListener.instance().removeFromClusterJobMap(((EntryEvent) hazelcastEntry).getKey());
-			}
-						
+									
 		}
 		
 				

@@ -1,5 +1,6 @@
 package com.egi.datacollector.processor.mapreduce;
 
+import java.io.Serializable;
 import java.util.Collection;
 
 /**
@@ -11,7 +12,7 @@ import java.util.Collection;
  * @param <K>	mapped key type
  * @param <V>	mapped value type
  */
-public interface IReducer<K, V> {
+public interface IReducer<K extends Serializable, V extends Serializable> {
 	
 	public KeyValue<K, V> reduceForKey(K key, Collection<V> values);
 		

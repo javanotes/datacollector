@@ -9,7 +9,8 @@ import com.egi.datacollector.listener.Listener;
 import com.egi.datacollector.listener.ListenerState.State;
 import com.egi.datacollector.listener.cluster.ClusterListener;
 import com.egi.datacollector.listener.cluster.ClusterLock;
-import com.egi.datacollector.startup.Main;
+import com.egi.datacollector.processor.smpp.SmppData;
+import com.egi.datacollector.server.Main;
 import com.egi.datacollector.util.Config;
 import com.egi.datacollector.util.concurrent.ActorFramework;
 import com.logica.smpp.pdu.SubmitSM;
@@ -18,7 +19,6 @@ import com.logica.smscsim.PDUProcessorGroup;
 import com.logica.smscsim.SMSCListener;
 import com.logica.smscsim.SMSCSession;
 import com.logica.smscsim.ShortMessageStore;
-import com.logica.smscsim.ShortMessageValue;
 import com.logica.smscsim.SimulatorPDUProcessor;
 import com.logica.smscsim.SimulatorPDUProcessorFactory;
 
@@ -33,7 +33,11 @@ public class SmppListener extends Listener implements Runnable {
     private ShortMessageStore messageStore = null;
     private DeliveryInfoSender deliveryInfoSender = null;
     
-    
+    /**
+     * 
+     * @author esutdal
+     *
+     */
     private class SmppMessageStore extends ShortMessageStore{
     	
     	SmppMessageStore(){
@@ -43,8 +47,8 @@ public class SmppListener extends Listener implements Runnable {
     	public void submit(SubmitSM message, String messageId, String systemId)
 		{
 			
-			ShortMessageValue sms = new ShortMessageValue(systemId, message);
-			sms.setMessageId(messageId);
+			SmppData sms = new SmppData(message.getSourceAddr().getAddress(), message.getDestAddr().getAddress(), message.getShortMessage());
+			
 			ActorFramework.instance().submitDataToDistributedMap(sms);
 		}
     }
@@ -198,6 +202,7 @@ public class SmppListener extends Listener implements Runnable {
 				//catching all since a null pointer will be thrown
 				//in a clustered environment. this is because the ServerSocket
 				//is wrapped over a library class and it remains null on bind exception
+				//can't help, this is how Logica has implemented their smpp library :)
 			}
             smscListener = null;
             if (deliveryInfoSender!=null) {

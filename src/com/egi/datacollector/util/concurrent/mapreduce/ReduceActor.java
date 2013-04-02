@@ -1,5 +1,7 @@
 package com.egi.datacollector.util.concurrent.mapreduce;
 
+import java.io.Serializable;
+
 import akka.actor.UntypedActor;
 
 import com.egi.datacollector.processor.mapreduce.IReducer;
@@ -7,7 +9,7 @@ import com.egi.datacollector.processor.mapreduce.KeyValue;
 import com.egi.datacollector.processor.mapreduce.pojo.ReduceMsg;
 import com.egi.datacollector.processor.mapreduce.pojo.ReducedMsg;
 
-public class ReduceActor<K, V> extends UntypedActor {
+public class ReduceActor<K extends Serializable, V extends Serializable> extends UntypedActor {
 	
 	private final IReducer<K, V> reduceFunction;
 	

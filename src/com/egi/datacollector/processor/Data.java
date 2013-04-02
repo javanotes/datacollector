@@ -1,6 +1,8 @@
 package com.egi.datacollector.processor;
 
-public interface Data {
+import java.io.Serializable;
+
+public interface Data extends Serializable{
 	
 	public String type();
 

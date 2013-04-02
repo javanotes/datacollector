@@ -1,10 +1,13 @@
 package com.egi.datacollector.processor.mapreduce;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.log4j.Logger;
 
 import akka.actor.Actor;
 import akka.actor.ActorRef;
@@ -62,18 +65,21 @@ import com.typesafe.config.ConfigFactory;
  * @param <K> mapped key type
  * @param <V> mapped value type
  */
-public class MapReduceFramework<X, K, V> {
+public class MapReduceFramework<X, K extends Serializable, V extends Serializable> {
+	
+	private static final Logger log = Logger.getLogger(MapReduceFramework.class);
 	
 	private IMapper<X, K, V> map = null;
 	private IReducer<K, V> reduce = null;
 	
 	private ActorRef masterActor = null;
-	private int partSize = 999;
+	private int partSize = 9;
 	
-	private int mappers = 1000;
+	private int mappers = 10;
+	private int reducers = 20;
 	
 	/**
-	 * Set the number of mapper actors. Default 1000
+	 * Set the number of mapper actors. Default 10
 	 * @param mappers
 	 */
 	public void setMappers(int mappers) {
@@ -81,13 +87,13 @@ public class MapReduceFramework<X, K, V> {
 	}
 
 	/**
-	 * Set the number of reducer actors. Default 2000
+	 * Set the number of reducer actors. Default 20
 	 * @param reducers
 	 */
 	public void setReducers(int reducers) {
 		this.reducers = reducers;
 	}
-	private int reducers = 2000;
+	
 	
 	/**
 	 * We are employing a parallel divide and conquer algorithm for the reduction phase.
@@ -106,16 +112,14 @@ public class MapReduceFramework<X, K, V> {
 	 * be done through the latch
 	 */
 	private final CountDownLatch _akLatch = new CountDownLatch(1);
-	
-	//from Akka docs
+		
 	private final static Config akkaConfig = ConfigFactory.parseString(
 			
 				"datacollector.mapreduce-dispatcher.type = Dispatcher \n" +
 				"datacollector.mapreduce-dispatcher.executor = fork-join-executor \n" +
 				"datacollector.mapreduce-dispatcher.fork-join-executor.parallelism-min = 8 \n" +
 				"datacollector.mapreduce-dispatcher.fork-join-executor.parallelism-factor = 3.0 \n" +
-				"datacollector.mapreduce-dispatcher.fork-join-executor.parallelism-max = 64 \n" /*+ 
-				"prio-dispatcher.mailbox-type = akka.docs.dispatcher.DispatcherDocSpec$PriorityMailBox "*/
+				"datacollector.mapreduce-dispatcher.fork-join-executor.parallelism-max = 64 \n" 
 	);
 			
 		
@@ -129,14 +133,15 @@ public class MapReduceFramework<X, K, V> {
 	public MapReduceFramework(IMapper<X, K, V> map, IReducer<K, V> reduce){
 		this.map = map;
 		this.reduce = reduce;
-		
+		init();
 	}
 	
 	private volatile boolean isAkkaInit = false;
 	
 	
-	private void initAkka(){
+	private void init(){
 		if(!isAkkaInit){
+			
 			akka = ActorSystem.create("actors", akkaConfig);
 			
 			masterActor = akka.actorOf(new Props(new UntypedActorFactory() {
@@ -154,7 +159,7 @@ public class MapReduceFramework<X, K, V> {
 				}
 			}));
 			isAkkaInit = true;
-			
+			log.info("Starting mapreduce job");
 		}
 		
 	}
@@ -168,9 +173,6 @@ public class MapReduceFramework<X, K, V> {
 	public void execute(Collection<X> source){
 		if(source != null){
 			
-			//initialise the Akka actor system
-			initAkka();
-			
 			//start the system by passing message to the master Actor
 			masterActor.tell(new InputCollectionMsg<X>(source), akka.guardian());
 						
@@ -182,11 +184,8 @@ public class MapReduceFramework<X, K, V> {
 	 * For passing each data
 	 * @param source
 	 */
-	public void add(X eachData){
+	public void execute(X eachData){
 		if(eachData != null){
-			
-			//initialise the Akka actor system
-			initAkka();
 			
 			//start the system by passing message to the master Actor
 			masterActor.tell(new InputDataMsg<X>(eachData), akka.guardian());
@@ -202,7 +201,7 @@ public class MapReduceFramework<X, K, V> {
 			
 			boolean finished = _akLatch.await(30, TimeUnit.MINUTES);
 			if(!finished){
-				//timed out
+				log.error("Mapreduce job timed out! Check logs");
 			}
 						
 		} catch (InterruptedException e) {
