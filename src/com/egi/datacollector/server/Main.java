@@ -22,7 +22,7 @@ import com.egi.datacollector.listener.ftp.FtpListener;
 import com.egi.datacollector.listener.smpp.SmppListener;
 import com.egi.datacollector.loader.keyval.RedisClient;
 import com.egi.datacollector.util.Config;
-import com.egi.datacollector.util.concurrent.ActorFramework;
+import com.egi.datacollector.util.actors.ActorFramework;
 import com.egi.datacollector.util.exception.BootstrapException;
 
 /**
@@ -114,20 +114,28 @@ public class Main {
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {
+	public static void main(final String[] args) {
 		processId = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
-				
-		startInstance(args);
 		
-		Runtime.getRuntime().addShutdownHook(new Thread("datacollector.shutdown.service"){
+		new Thread("datacollector.bootstrap"){
 			
-			@Override
-			public void run(){stopInstance();}
+			public void run(){
+				startInstance(args);
+				
+				Runtime.getRuntime().addShutdownHook(new Thread("datacollector.shutdown.service"){
+					
+					@Override
+					public void run(){stopInstance();}
+					
+				});
+								
+				setInstanceProperty();
+				log.info("========== DataCollector instance: " + processId + " is running in " + (Config.isClusteredModeEnabled() ? "clustered " : "standalone ") + "mode ============");	
+				
+			}
 			
-		});
-						
-		setInstanceProperty();
-		log.info("========== DataCollector instance: " + processId + " is running in " + (Config.isClusteredModeEnabled() ? "clustered " : "standalone ") + "mode ============");	
+		}.start();
+				
 		
 	}
 	

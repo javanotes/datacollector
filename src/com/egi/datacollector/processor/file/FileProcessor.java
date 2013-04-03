@@ -14,11 +14,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
+import com.egi.datacollector.listener.cluster.ClusterListener;
 import com.egi.datacollector.processor.Data;
 import com.egi.datacollector.processor.Processor;
 import com.egi.datacollector.util.Config;
 import com.egi.datacollector.util.Utilities;
-import com.egi.datacollector.util.concurrent.ActorFramework;
+import com.egi.datacollector.util.actors.ActorFramework;
 import com.egi.datacollector.util.exception.ProcessorException;
 
 public class FileProcessor extends Processor {
@@ -46,12 +47,12 @@ public class FileProcessor extends Processor {
 			switch (nextChar) {
 			case '\r':
 				
-				//ActorFramework.instance().submitFileRecordToProcess(new RecordData(recordBuffer.toString()));
+				ClusterListener.instance().addToMapReduceJobsMap(new RecordData(recordBuffer.toString()));
 				recordBuffer.delete(0, recordLength);
 				recordLength = 0;
 				break;
 			case '\n':
-				//ActorFramework.instance().submitFileRecordToProcess(new RecordData(recordBuffer.toString()));
+				ClusterListener.instance().addToMapReduceJobsMap(new RecordData(recordBuffer.toString()));
 				recordBuffer.delete(0, recordLength);
 				recordLength = 0;
 				break;

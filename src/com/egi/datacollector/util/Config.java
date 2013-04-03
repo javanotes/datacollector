@@ -121,7 +121,7 @@ public class Config {
 
 	public static int getSmppMaxConnSize(){
 		try {
-			return Integer.parseInt(getProperty("datacollector.listener.smpp.max_session"));
+			return Integer.parseInt(getProperty("datacollector.listener.smpp.sessionthreads"));
 		} catch (NumberFormatException e) {
 			
 		}
@@ -310,5 +310,10 @@ public class Config {
 
 	public static boolean useMapReduceFunction() {
 		return "true".equals(getProperty("datacollector.processor.file.use.mapreduce"));
+	}
+
+	public static int getForkJoinParallelism() {
+		// TODO Auto-generated method stub
+		return 8;
 	}
 }

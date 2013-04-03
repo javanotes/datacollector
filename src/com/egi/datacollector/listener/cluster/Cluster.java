@@ -5,10 +5,11 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
+import com.egi.datacollector.processor.file.RecordData;
 import com.egi.datacollector.processor.smpp.SmppData;
 import com.egi.datacollector.server.Main;
 import com.egi.datacollector.util.Config;
-import com.egi.datacollector.util.concurrent.ActorFramework;
+import com.egi.datacollector.util.actors.ActorFramework;
 import com.egi.datacollector.util.exception.GeneralException;
 import com.egi.datacollector.util.ssh.SshExecution;
 import com.hazelcast.config.FileSystemXmlConfig;
@@ -45,6 +46,7 @@ class Cluster {
 	public static final String CLUSTER_MUTEX = "CLUSTER_MUTEX";
 	
 	public static final String INSTANCE_SHUTDOWN_Topic = "INSTANCE_SHUTDOWN_Topic";
+	public static final String MAP_REDUCE_TOPIC = "mapReduceBroadcast";
 	public static final String INSTANCE_STARTUP_Q = "INSTANCE_STARTUP_Q";
 	
 	public static final String PERSISTENT_JOB_MAP = "distributableJobs";
@@ -188,10 +190,10 @@ class Cluster {
 		
 	}
 	
-	Object get(Object key){
+	Object get(String distributedMapName, Object key){
 		if(isRunning()){
 			
-			return hazelcast.getMap(PERSISTENT_JOB_MAP).get(key);
+			return hazelcast.getMap(PERSISTENT_JOB_MAP) != null ? hazelcast.getMap(PERSISTENT_JOB_MAP).get(key) : null;
 		}
 		return null;
 		
@@ -199,14 +201,17 @@ class Cluster {
 	
 	void remove(String distributedMapName, Long key){
 		if(isRunning()){
-			hazelcast.getMap(distributedMapName).remove(key);
-			releaseKey(key);
+			if(hazelcast.getMap(distributedMapName) != null){
+				hazelcast.getMap(distributedMapName).remove(key);
+				releaseKey(key);
+			}
 		}
 	}
 		
-	void put(Object key, Object val){
+	void put(String distributedMapName, Object key, Object val){
 		if(isRunning()){
-			hazelcast.getMap(PERSISTENT_JOB_MAP).put(key, val);
+			if(hazelcast.getMap(distributedMapName) != null)
+				hazelcast.getMap(distributedMapName).put(key, val);
 		}
 	}
 	
@@ -267,6 +272,11 @@ class Cluster {
 	
 	@SuppressWarnings("unused")
 	private LifecycleState _memberState = LifecycleState.STARTING;
+	
+	void setupMapReduceCommChannel(MessageListener<Object> msgListener, EntryListener<Object, Object> entryListener){
+		hazelcast.getTopic(MAP_REDUCE_TOPIC).addMessageListener(msgListener);
+		hazelcast.getMap(MAPREDUCE_JOB_MAP).addLocalEntryListener(entryListener);
+	}
 			
 	void init(final MembershipListener clusterListener, MessageListener<Object> msgListener, EntryListener<Object, Object> localMapListener){
 			
@@ -317,6 +327,14 @@ class Cluster {
 			
 		}
 	}
+	
+	void broadcast(String distributedTopicName, Object code){
+		if(isRunning()){
+			
+			hazelcast.getTopic(distributedTopicName).publish(code);
+			
+		}
+	}
 			
 	void stop(){
 		if(hazelcast != null){
@@ -327,15 +345,19 @@ class Cluster {
 		
 	}
 
-	void put(byte[] dataBytes) {
-		// do nothing
-		
-	}
-
+	
 	void put(SmppData smppData) {
 		if(isRunning()){
 			Long key = acquireKey();
 			hazelcast.getMap(PERSISTENT_JOB_MAP).put(key, smppData);
+		}
+		
+	}
+
+	void put(RecordData fileRecord) {
+		if(isRunning()){
+			Long key = acquireKey();
+			hazelcast.getMap(MAPREDUCE_JOB_MAP).put(key, fileRecord);
 		}
 		
 	}

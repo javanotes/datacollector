@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -19,45 +18,12 @@ import akka.actor.UntypedActorFactory;
 import com.egi.datacollector.processor.mapreduce.messages.EndProduceMsg;
 import com.egi.datacollector.processor.mapreduce.messages.InputCollectionMsg;
 import com.egi.datacollector.processor.mapreduce.messages.InputDataMsg;
-import com.egi.datacollector.util.concurrent.mapreduce.MasterActor;
+import com.egi.datacollector.util.actors.mapreduce.MasterActor;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 
 /**
- * A map-reduce framework, based on a single JVM (non distributed) multithreaded execution. Execution of parallel threads in multiple core
- * relies on the underlying thread scheduling performed by Scala/JVM.
- * <p>
- * Please note that NOT ALL problems can be solved in mapreduce pattern. The fundamental for implementing a mapreduce pattern is when:
- * <p>
- * <li> The job can be decomposed into similar sub functions </li>
- * <li> The sub functions are independent of each other</li>
- * <li> The sub function results can be grouped and re-composed <b>associatively (ordering is not important)</b> to get the desired result</li>
- * 
- * 
- *  
- * 
- * <p><p>
- * <h1>What is MapReduce</h1>(Adapted from: <a href="http://silviomassari.wordpress.com/2011/07/06/understanding-mapreduce-mongodb/">Understanding MapReduce</a>)<p>
- * It is an algorithm that can process a very large amount of data in parallel. 
- * <b>It receives three inputs, a source collection, a Map function and a Reduce function. And it will return a new data collection.</b>
-
-	<p><i>Collection MapReduce(Collection source, Function map, Function reduce)</i><p>
-
-	The algorithm is composed by few steps, the first one consists to execute the Map function to each item within the source collection. The Map will return zero or may instances of Key/Value objects.
-
- 	<p><i>ArrayOfKeyValue Map(object itemFromSourceCollection)</i>
-
-	So, we can say that Map�s responsibility is to convert an item from the source collection to zero or many instances of Key/Value objects.
-	At the next step , the algorithm will sort all Key/Value instances and it will create new object instances where all values will be grouped by Key.
-
-	The last step will executes the Reduce function by each grouped Key/Value instance.
-
-	<p><i>ItemResult Reduce(KeyWithArrayOfValues item)</i>
-
- 	The Reduce function will return a new item instance that will be included into the result collection.
-	<b>The implementation of the Map and Reduce functions are specific for the task that we want to accomplish.</b>
-
  * 
  * 
  * @author esutdal
@@ -66,13 +32,8 @@ import com.typesafe.config.ConfigFactory;
  * @param <K> mapped key type
  * @param <V> mapped value type
  */
-public class MapReduce<X, K extends Serializable, V extends Serializable> implements Callable<Collection<KeyValue<K, V>>>,Serializable{
-	
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 2363694904604770228L;
-
+public class MapReduce<X extends Serializable, K extends Serializable, V extends Serializable>{
+		
 	private static final Logger log = Logger.getLogger(MapReduce.class);
 	
 	private IMapper<X, K, V> map = null;
@@ -128,7 +89,6 @@ public class MapReduce<X, K extends Serializable, V extends Serializable> implem
 				"datacollector.mapreduce-dispatcher.fork-join-executor.parallelism-max = 64 \n" 
 	);
 			
-		
 	private final List<KeyValue<K, V>> results = new ArrayList<KeyValue<K, V>>();
 	
 	/**
@@ -200,7 +160,7 @@ public class MapReduce<X, K extends Serializable, V extends Serializable> implem
 		
 	}
 				
-	private Collection<KeyValue<K, V>> getResult(){
+	public Collection<KeyValue<K, V>> getResult(){
 		masterActor.tell(new EndProduceMsg(), akka.guardian());
 		try {
 			//wait while the processing is complete
@@ -217,12 +177,6 @@ public class MapReduce<X, K extends Serializable, V extends Serializable> implem
 		return results;
 		
 	}
-
-	@Override
-	public Collection<KeyValue<K, V>> call() throws Exception {
 		
-		return getResult();
-	}
-	
 			
 }

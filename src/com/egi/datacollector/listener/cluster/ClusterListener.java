@@ -16,10 +16,11 @@ import org.apache.log4j.Logger;
 
 import com.egi.datacollector.listener.Listener;
 import com.egi.datacollector.listener.ListenerState.State;
+import com.egi.datacollector.processor.file.RecordData;
 import com.egi.datacollector.processor.smpp.SmppData;
 import com.egi.datacollector.server.Main;
 import com.egi.datacollector.util.Config;
-import com.egi.datacollector.util.concurrent.ActorFramework;
+import com.egi.datacollector.util.actors.ActorFramework;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
 import com.hazelcast.core.MembershipEvent;
@@ -202,7 +203,7 @@ public class ClusterListener extends Listener implements Runnable {
 	 * @author esutdal
 	 *
 	 */
-	private class TopicListener implements MessageListener<Object>{
+	private class ShutdownBroadcastListener implements MessageListener<Object>{
 
 		@Override
 		public void onMessage(Message<Object> message) {
@@ -214,6 +215,15 @@ public class ClusterListener extends Listener implements Runnable {
 		
 	}
 	
+	private class MapReduceBroadcastListener implements MessageListener<Object>{
+
+		@Override
+		public void onMessage(Message<Object> message) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
 		
 	/**
 	 * 
@@ -295,26 +305,32 @@ public class ClusterListener extends Listener implements Runnable {
 	private class MapReduceJobsEntryListener implements EntryListener<Object, Object>{
 
 		@Override
-		public void entryAdded(EntryEvent<Object, Object> arg0) {
-			// TODO Auto-generated method stub
+		public void entryAdded(EntryEvent<Object, Object> mrData) {
+			if(mrData.getValue() instanceof RecordData){
+				ActorFramework.instance().submitForMapReduce((RecordData) mrData.getValue());
+			}
+			else if(mrData.getValue() instanceof String){
+				ActorFramework.instance().processMappedAndReduced();
+				
+			}
 			
 		}
 
 		@Override
 		public void entryEvicted(EntryEvent<Object, Object> arg0) {
-			// TODO Auto-generated method stub
+			// do nothing
 			
 		}
 
 		@Override
 		public void entryRemoved(EntryEvent<Object, Object> arg0) {
-			// TODO Auto-generated method stub
+			// do nothing
 			
 		}
 
 		@Override
 		public void entryUpdated(EntryEvent<Object, Object> arg0) {
-			// TODO Auto-generated method stub
+			// do nothing
 			
 		}
 		
@@ -329,7 +345,7 @@ public class ClusterListener extends Listener implements Runnable {
 
 		@Override
 		public void entryAdded(EntryEvent<Object, Object> entry) {
-			log.debug("Added entry");
+			
 			ActorFramework.instance().processDataFromDistributedMap(entry);
 			
 		}
@@ -360,7 +376,11 @@ public class ClusterListener extends Listener implements Runnable {
 		if(cluster == null){
 			try {
 				cluster = new Cluster();
-				cluster.init(new InstanceListener(), new TopicListener(), new DistributableJobsEntryListener());
+				cluster.init(new InstanceListener(), new ShutdownBroadcastListener(), new DistributableJobsEntryListener());
+				
+				if(Config.useMapReduceFunction()){
+					cluster.setupMapReduceCommChannel(new MapReduceBroadcastListener(), new MapReduceJobsEntryListener());
+				}
 				
 			} catch (FileNotFoundException e) {
 				log.fatal("Unable to read hazelcast config. Cluster listener not running!", e);
@@ -380,6 +400,15 @@ public class ClusterListener extends Listener implements Runnable {
 	public void addToDistributableJobsMap(SmppData smppData) {
 		
 		cluster.put(smppData);
+		
+	}
+	
+	public void broadcastForMapReduce(String broadcastMsg){
+		cluster.broadcast(Cluster.MAP_REDUCE_TOPIC, broadcastMsg);
+	}
+	public void addToMapReduceJobsMap(RecordData fileRecord) {
+		
+		cluster.put(fileRecord);
 		
 	}
 

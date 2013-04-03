@@ -172,26 +172,50 @@ public class SMSCAdaptor extends SmppObject implements Runnable
         debug.exit(this);
     }
     
-    private final ExecutorService threadPool = Config.getSmppMaxConnSize() == 0 ? Executors.newCachedThreadPool(new ThreadFactory() {
-		
-    	private AtomicInteger n = new AtomicInteger();
-		@Override
-		public Thread newThread(Runnable r) {
-			
-			return new Thread(r, "datacollector.smpp.request-"+n.getAndIncrement());
-		}
-	})
-	
-	:
-		Executors.newFixedThreadPool(Config.getSmppMaxConnSize(), new ThreadFactory() {
-			
-	    	private AtomicInteger n = new AtomicInteger();
-			@Override
-			public Thread newThread(Runnable r) {
-				
-				return new Thread(r, "datacollector.smpp.request-"+n.getAndIncrement());
-			}
-		});
+    private final ExecutorService threadPool = /*new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), 
+    																	Config.getSmppMaxConnSize(), 
+    																	60, 
+    																	TimeUnit.SECONDS, 
+    																	new ArrayBlockingQueue<Runnable>(Config.getSmppMaxConnSize()), 
+    																	new ThreadFactory() {
+    																		
+    																    	private AtomicInteger n = new AtomicInteger();
+    																		@Override
+    																		public Thread newThread(Runnable r) {
+    																			
+    																			return new Thread(r, "datacollector.smpp.request-"+n.getAndIncrement());
+    																		}
+    																	}, 
+    																	new RejectedExecutionHandler(){
+
+																			@Override
+																			public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+																				
+																				System.err.println("SMSCAdaptor::Request rejected");
+																			}
+    																		
+    																	});*/
+    
+											    Config.getSmppMaxConnSize() == 0 ? Executors.newCachedThreadPool(new ThreadFactory() {
+													
+											    	private AtomicInteger n = new AtomicInteger();
+													@Override
+													public Thread newThread(Runnable r) {
+														
+														return new Thread(r, "datacollector.smpp.request-"+n.getAndIncrement());
+													}
+												})
+												
+												:
+													Executors.newFixedThreadPool(Config.getSmppMaxConnSize(), new ThreadFactory() {
+														
+												    	private AtomicInteger n = new AtomicInteger();
+														@Override
+														public Thread newThread(Runnable r) {
+															
+															return new Thread(r, "datacollector.smpp.request-"+n.getAndIncrement());
+														}
+													});
     
     /**
      * The "one" listen attempt called from <code>run</code> method.

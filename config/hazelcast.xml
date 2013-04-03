@@ -151,7 +151,7 @@
 		<merge-policy>hz.ADD_NEW_ENTRY</merge-policy>
 	</map>
 	<map name="mapReduceJobs">
-		<map-store enabled="true">
+		<map-store enabled="false">
 			<class-name>com.egi.datacollector.loader.RedisBackedMapStore</class-name>
 			<write-delay-seconds>0</write-delay-seconds>
 		</map-store>

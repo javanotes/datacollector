@@ -12,7 +12,7 @@ import com.egi.datacollector.listener.cluster.ClusterLock;
 import com.egi.datacollector.processor.smpp.SmppData;
 import com.egi.datacollector.server.Main;
 import com.egi.datacollector.util.Config;
-import com.egi.datacollector.util.concurrent.ActorFramework;
+import com.egi.datacollector.util.actors.ActorFramework;
 import com.logica.smpp.pdu.SubmitSM;
 import com.logica.smscsim.DeliveryInfoSender;
 import com.logica.smscsim.PDUProcessorGroup;
