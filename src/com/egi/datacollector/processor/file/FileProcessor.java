@@ -71,12 +71,12 @@ public class FileProcessor extends Processor {
 			switch (nextChar) {
 			case '\r':
 				
-				ActorFramework.instance().submitFileRecordToProcess(new RecordData(recordBuffer.toString()));
+				ActorFramework.instance().submitDataToDistributedMap(new RecordData(recordBuffer.toString()));
 				recordBuffer.delete(0, recordLength);
 				recordLength = 0;
 				break;
 			case '\n':
-				ActorFramework.instance().submitFileRecordToProcess(new RecordData(recordBuffer.toString()));
+				ActorFramework.instance().submitDataToDistributedMap(new RecordData(recordBuffer.toString()));
 				recordBuffer.delete(0, recordLength);
 				recordLength = 0;
 				break;
@@ -96,6 +96,8 @@ public class FileProcessor extends Processor {
 		if(Utilities.isNullOrBlank(fileName)){
 			throw new ProcessorException("File name is null");
 		}
+		if(Config.useMapReduceFunction())
+			throw new ProcessorException("Map reduce not implemented");
 		log.info("Starting transforming file: " + fileName);
 		FileChannel channel = null;
 		MappedByteBuffer byteBuffer = null;
@@ -172,7 +174,7 @@ public class FileProcessor extends Processor {
 				} catch (InterruptedException e) {
 					log.warn(e.getMessage());
 				}
-				
+				ActorFramework.instance().submitDataToDistributedMap(RecordData.endOfFile());
 				log.debug("Time taken: " + (System.currentTimeMillis() - start));
 			}
 		
@@ -184,6 +186,8 @@ public class FileProcessor extends Processor {
 		if(Utilities.isNullOrBlank(fileName)){
 			throw new ProcessorException("File name is null");
 		}
+		if(Config.useMapReduceFunction())
+			throw new ProcessorException("Map reduce not implemented");
 		BufferedReader buffer = null;
 		
 		log.info("Starting transforming file: " + fileName);
@@ -194,16 +198,19 @@ public class FileProcessor extends Processor {
 			RecordData record = null;
 			
 			String nextLine = "";
+			
 			while((nextLine = buffer.readLine()) != null){
 				record = new RecordData(nextLine);
 				if(Config.useMapReduceFunction()){
 					//do map reduce
+					
 				}
 				else{
-					ActorFramework.instance().submitFileRecordToProcess(record);
+					ActorFramework.instance().submitDataToDistributedMap(record);
 				}
 				
 			}
+			ActorFramework.instance().submitDataToDistributedMap(RecordData.endOfFile());
 			log.debug("Time taken: " + (System.currentTimeMillis() - start));
 		} catch (FileNotFoundException e) {
 			log.error(e.getMessage(), e);

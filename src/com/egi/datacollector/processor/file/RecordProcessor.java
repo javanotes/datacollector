@@ -14,6 +14,7 @@ public class RecordProcessor extends Processor {
 		// You have a file type and a single csv record in the RecordData
 		// process the record (in batch maybe)
 		if(job instanceof RecordData){
+			log.info("End of file reached:" + ((RecordData)job).isEof());
 			log.info("data: "+((RecordData)job).getRecord());
 		}
 		return false;

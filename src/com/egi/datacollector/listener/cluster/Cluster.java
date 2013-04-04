@@ -9,9 +9,11 @@ import com.egi.datacollector.processor.file.RecordData;
 import com.egi.datacollector.processor.smpp.SmppData;
 import com.egi.datacollector.server.Main;
 import com.egi.datacollector.util.Config;
+import com.egi.datacollector.util.Constants;
 import com.egi.datacollector.util.actors.ActorFramework;
-import com.egi.datacollector.util.exception.GeneralException;
+import com.egi.datacollector.util.exception.SystemException;
 import com.egi.datacollector.util.ssh.SshExecution;
+
 import com.hazelcast.config.FileSystemXmlConfig;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryEventType;
@@ -40,6 +42,14 @@ import com.hazelcast.partition.PartitionService;
  *
  */
 class Cluster {
+	
+	/*
+	 * The broadcast address for an IPv4 host can be obtained by performing a bitwise OR operation 
+	 * between the bit complement of the subnet mask and the host's IP address.
+
+	   Example: For broadcasting a packet to an entire IPv4 subnet using the private IP address space 172.16.0.0/12, 
+	   which has the subnet mask 255.240.0.0, the broadcast address is 172.16.0.0 | 0.15.255.255 = 172.31.255.255.
+	 */
 	
 	public static final String CLUSTER_QUEUE = "DataCollectorDistributedQueue";
 	public static final String CLUSTER_NAME = "DataCollectorCluster";
@@ -76,18 +86,29 @@ class Cluster {
 			boolean locked = lock.tryLock();
 			if (locked) {
 				String host = node.getInetSocketAddress().getHostString();
-				log.info("Restarting member node: " + host);
+				
 				try {
 					ssh = new SshExecution(host, Config.sshUser(), Config.sshPassword());
 					String result = ssh.runCommand(Config.sshCmdIsInstanceRunning());
 					
 					if (Integer.parseInt(result) == 0) {
-						log.debug("SSH login to node successful");
-						//TODO run datacollector on node
-						log.info("Started member");
+						log.info("Restarting member node: " + host);
+						result = ssh.runCommand(Config.sshCmdStartInstance());
+						if (Integer.parseInt(result) == 0){
+							log.info("Started member");
+							try {
+								//block this lock and allow for remote instance to startup completely
+								Thread.sleep(2000);
+							} catch (InterruptedException e) {
+								
+							}
+						}
+						else{
+							log.warn("Seems like remote member did not start!");
+						}
 					}
 
-				} catch (GeneralException e) {
+				} catch (SystemException e) {
 					log.warn("Exception while trying to restart member", e);
 				} finally {
 					if (ssh != null) {
@@ -140,7 +161,7 @@ class Cluster {
 		return false;
 		
 	}
-	private void releaseKey(Long key){
+	private void releaseKey(long key){
 		ILock lock = hazelcast.getLock(KEY_LOCK);
 		try {
 			boolean locked = lock.tryLock(15, TimeUnit.SECONDS);
@@ -199,11 +220,12 @@ class Cluster {
 		
 	}
 	
-	void remove(String distributedMapName, Long key){
+	void remove(String distributedMapName, Object key){
 		if(isRunning()){
 			if(hazelcast.getMap(distributedMapName) != null){
 				hazelcast.getMap(distributedMapName).remove(key);
-				releaseKey(key);
+				if(key instanceof Long)
+					releaseKey((Long) key);
 			}
 		}
 	}
@@ -284,6 +306,34 @@ class Cluster {
 		hazelcast.getTopic(INSTANCE_SHUTDOWN_Topic).addMessageListener(msgListener);
 		hazelcast.getMap(PERSISTENT_JOB_MAP).addLocalEntryListener(localMapListener);
 		
+		//this is for sort of broadcast messages
+		hazelcast.getMap(PERSISTENT_JOB_MAP).addEntryListener(new EntryListener<Object, Object>() {
+
+			@Override
+			public void entryAdded(EntryEvent<Object, Object> entry) {
+				//this is a end-of-file entry. all instances should know it
+				ActorFramework.instance().processDataFromDistributedMap(entry);
+			}
+
+			@Override
+			public void entryEvicted(EntryEvent<Object, Object> entryevent) {
+				
+				
+			}
+
+			@Override
+			public void entryRemoved(EntryEvent<Object, Object> entryevent) {
+				
+				
+			}
+
+			@Override
+			public void entryUpdated(EntryEvent<Object, Object> entryevent) {
+				
+				
+			}
+		}, Constants.EOF, true);
+		
 		if(Config.isClusteredModeEnabled()){
 			partitionService = hazelcast.getPartitionService();
 			partitionService.addMigrationListener(new MigrationListener() {
@@ -354,10 +404,16 @@ class Cluster {
 		
 	}
 
+	void putMR(RecordData fileRecord){
+		if(isRunning()){
+			Object key = fileRecord.isEof() ? Constants.EOF : acquireKey();
+			hazelcast.getMap(MAPREDUCE_JOB_MAP).put(key, fileRecord);
+		}
+	}
 	void put(RecordData fileRecord) {
 		if(isRunning()){
-			Long key = acquireKey();
-			hazelcast.getMap(MAPREDUCE_JOB_MAP).put(key, fileRecord);
+			Object key = fileRecord.isEof() ? Constants.EOF : acquireKey();
+			hazelcast.getMap(PERSISTENT_JOB_MAP).put(key, fileRecord);
 		}
 		
 	}

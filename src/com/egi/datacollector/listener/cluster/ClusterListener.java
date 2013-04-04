@@ -181,13 +181,13 @@ public class ClusterListener extends Listener implements Runnable {
 		
 	}
 	
-	public void removeFromDistributableJobsMap(Long entryKey){
+	public void removeFromDistributableJobsMap(Object entryKey){
 		if(entryKey != null){
 			cluster.remove(Cluster.PERSISTENT_JOB_MAP, entryKey);
 		}
 	}
 	
-	public void removeFromMapReduceJobsMap(Long entryKey){
+	public void removeFromMapReduceJobsMap(Object entryKey){
 		if(entryKey != null){
 			cluster.remove(Cluster.MAPREDUCE_JOB_MAP, entryKey);
 		}
@@ -403,12 +403,19 @@ public class ClusterListener extends Listener implements Runnable {
 		
 	}
 	
+	public void addToDistributableJobsMap(RecordData fileRecord) {
+		
+		cluster.put(fileRecord);
+		
+	}
+	
 	public void broadcastForMapReduce(String broadcastMsg){
 		cluster.broadcast(Cluster.MAP_REDUCE_TOPIC, broadcastMsg);
 	}
+	
 	public void addToMapReduceJobsMap(RecordData fileRecord) {
 		
-		cluster.put(fileRecord);
+		cluster.putMR(fileRecord);
 		
 	}
 

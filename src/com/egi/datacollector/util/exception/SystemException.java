@@ -1,28 +1,28 @@
 package com.egi.datacollector.util.exception;
 
-public class GeneralException extends Exception {
+public class SystemException extends Exception {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 5302061994602384584L;
 	
-	public GeneralException()
+	public SystemException()
     {
 		super();
     }
 
-    public GeneralException(String message)
+    public SystemException(String message)
     {
         super(message);
     }
 
-    public GeneralException(String message, Throwable cause)
+    public SystemException(String message, Throwable cause)
     {
         super(message, cause);
     }
 
-    public GeneralException(Throwable cause)
+    public SystemException(Throwable cause)
     {
         super(cause);
     }

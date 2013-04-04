@@ -37,15 +37,13 @@ public class ActorFramework {
 	private ActorSystem akka = null;
 	
 	public void stop(){
-		if(smppLoader != null){
-			akka.stop(smppLoader);
+		if(workCollector != null){
+			akka.stop(workCollector);
 		}
-		if(smppDistributor != null){
-			akka.stop(smppDistributor);
+		if(workDistributor != null){
+			akka.stop(workDistributor);
 		}
-		if(fileRecordLoader != null){
-			akka.stop(fileRecordLoader);
-		}
+		
 		akka.shutdown();
 		akka.awaitTermination(Duration.apply(1, TimeUnit.MINUTES));
 		log.info("Stopped actor system");
@@ -54,7 +52,7 @@ public class ActorFramework {
 	private ActorFramework(){
 		akka = ActorSystem.create("actors", akkaConfig);
 		
-		smppLoader = akka.actorOf(new Props(new UntypedActorFactory() {
+		workCollector = akka.actorOf(new Props(new UntypedActorFactory() {
 			
 			/**
 			 * 
@@ -63,23 +61,10 @@ public class ActorFramework {
 
 			@Override
 			public Actor create() throws Exception {
-				return new SmppProcessorActor();
+				return new ProcessorActor();
 			}
 		}).withDispatcher("datacollector"));
-		
-		fileRecordLoader = akka.actorOf(new Props(new UntypedActorFactory() {
-			
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = -7969266935319752530L;
-
-			@Override
-			public Actor create() throws Exception {
-				return new FileProcessorActor();
-			}
-		}).withDispatcher("datacollector"));
-		
+						
 		mapReducedLoader = akka.actorOf(new Props(new UntypedActorFactory() {
 			
 			/**
@@ -89,11 +74,11 @@ public class ActorFramework {
 
 			@Override
 			public Actor create() throws Exception {
-				return new MapreduceProcessorActor();
+				return new MapReduceActor();
 			}
 		}).withDispatcher("datacollector"));
 		
-		smppDistributor = akka.actorOf(new Props(new UntypedActorFactory() {
+		workDistributor = akka.actorOf(new Props(new UntypedActorFactory() {
 			
 			/**
 			 * 
@@ -109,9 +94,7 @@ public class ActorFramework {
 	
 		
 		
-	public void submitFileRecordToProcess(RecordData record){
-		fileRecordLoader.tell(record, akka.guardian());
-	}
+	
 	private AtomicBoolean mapReduceInit = new AtomicBoolean();
 	
 	private CountDownLatch mapReduceLatch = null;
@@ -125,8 +108,6 @@ public class ActorFramework {
 			mapReduceResults = new ArrayList<KeyValue<String, String>>();
 			
 			mapreduceMaster = akka.actorOf(new Props(new UntypedActorFactory() {
-				
-				
 				/**
 				 * 
 				 */
@@ -200,17 +181,16 @@ public class ActorFramework {
 	 */
 	
 	public void processDataFromDistributedMap(EntryEvent<Object, Object> mapEntry){
-		smppLoader.tell(mapEntry, akka.guardian());
+		workCollector.tell(mapEntry, akka.guardian());
 	}
 	
 	public void processDataFromDistributedMap(Object mapValue){
-		smppLoader.tell(mapValue, akka.guardian());
+		workCollector.tell(mapValue, akka.guardian());
 	}
 	
-	private ActorRef smppDistributor = null;
+	private ActorRef workDistributor = null;
+	private ActorRef workCollector = null;
 	
-	private ActorRef smppLoader = null;
-	private ActorRef fileRecordLoader = null;
 	private ActorRef mapreduceMaster = null;
 	private ActorRef mapReducedLoader = null;
 	
@@ -245,9 +225,11 @@ public class ActorFramework {
 	}
 
 	public void submitDataToDistributedMap(SmppData sms) {
-		smppDistributor.tell(sms, akka.guardian());
+		workDistributor.tell(sms, akka.guardian());
 		
 	}
-		
+	public void submitDataToDistributedMap(RecordData record){
+		workDistributor.tell(record, akka.guardian());
+	}	
 
 }

@@ -316,4 +316,17 @@ public class Config {
 		// TODO Auto-generated method stub
 		return 8;
 	}
+
+	public static String sshCmdStartInstance() {
+		return getProperty("datacollector.ssh.cmd.start");
+	}
+
+	public static int getNoOfProcessorActors() {
+		try {
+			return Integer.parseInt(getProperty("datacollector.processor.actors"));
+		} catch (NumberFormatException e) {
+			
+		}
+		return 0;
+	}
 }

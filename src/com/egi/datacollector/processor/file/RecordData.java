@@ -1,8 +1,17 @@
 package com.egi.datacollector.processor.file;
 
 import com.egi.datacollector.processor.Data;
+import com.egi.datacollector.util.Constants;
 
 public class RecordData implements Data {
+	
+	public static RecordData endOfFile(){
+		return new RecordData(Constants.EOF);
+	}
+	
+	public boolean isEof(){
+		return Constants.EOF.equals(aRecord);
+	}
 	
 	/**
 	 * 

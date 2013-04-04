@@ -15,16 +15,26 @@ import ch.ethz.ssh2.ConnectionMonitor;
 import ch.ethz.ssh2.Session;
 
 import com.egi.datacollector.util.Config;
-import com.egi.datacollector.util.exception.GeneralException;
+import com.egi.datacollector.util.exception.SystemException;
 
 /**
- * A wrapper to execute remote scripts via ssh. Try to re-use a single instance as much as possible
+ * A wrapper to execute remote scripts via ssh. Try to re-use a single instance as much as possible in a single thread of execution.
+ * <i>Note: This class is not thread-safe.</i>
  * @author esutdal
  *
  */
 public class SshExecution {
 	
 	private static final Logger log = Logger.getLogger(SshExecution.class);
+	
+	public static final String SSH_NOT_EXECUTED = "SSH_NOT_EXECUTED";
+	public static final String SSH_NOT_CONNECTED = "SSH_NOT_CONNECTED";
+	public static final String SSH_NOT_AUTHENTICATED = "SSH_NOT_AUTHENTICATED";
+	public static final String SSH_NO_SESSION = "SSH_NO_SESSION";
+	
+	//private final ReentrantLock mutex = new ReentrantLock();
+	//private final Condition produced = mutex.newCondition();
+	//private final Condition consumed = mutex.newCondition();
 	
 	static{
 		Runtime.getRuntime().addShutdownHook(new Thread(){
@@ -56,44 +66,55 @@ public class SshExecution {
 	
 	private Connection sshConnection = null;
 	private Session sshSession = null;
-	BufferedReader responseReader = null;
+	private BufferedReader responseReader = null;
 			
 	private final Object sent = new Object();
 	private final Object received = new Object();
+	
 	private StringBuilder out = null;
 	
 	private Runnable reader = new Runnable(){
 		@Override
 		public void run(){
 			while(connected){
+				/*mutex.lock();
 				try {
-					synchronized (sent) {
-						sent.wait();
-					}
-				} catch (InterruptedException e) {}
-				
-				if (connected) {
-					String response = "";
-					out = new StringBuilder();
-					do {
-						try {
-							if (responseReader != null) {
-								response = responseReader.readLine();
-							} else {
-								response = null;
-							}
-						} catch (IOException e) {
+					try {
+						produced.await();
+					} catch (InterruptedException e1) {
+						
+					}*/
+					try {
+						synchronized (sent) {
+							sent.wait();
 						}
-						if(response != null)
-							out.append(response);
-
-					} while (response != null);
+					} catch (InterruptedException e) {}
 					
-					synchronized (received) {
-						received.notify();
+					if (connected) {
+						String response = "";
+						out = new StringBuilder();
+						do {
+							try {
+								if (responseReader != null) {
+									response = responseReader.readLine();
+								} else {
+									response = null;
+								}
+							} catch (IOException e) {
+							}
+							if(response != null)
+								out.append(response);
+
+						} while (response != null);
+						//consumed.signal();
+						synchronized (received) {
+							received.notify();
+						}
 					}
-				}
-				
+				/*} 
+				finally{
+					mutex.unlock();
+				}*/
 			}
 		}
 	};
@@ -109,8 +130,19 @@ public class SshExecution {
 	 */
 	private String exec(String unixCmd, boolean timedWait, long waitTime){
 		if(connected && sshSession != null){
+			
+			//mutex.lock();
 			try {
 				sshSession.execCommand(unixCmd);
+				/*produced.signal();
+				try {
+					if(timedWait)
+						consumed.await(waitTime, TimeUnit.MILLISECONDS);
+					else
+						consumed.await();
+				} catch (InterruptedException e) {
+					
+				}*/
 				synchronized (sent) {
 					sent.notify();
 				}
@@ -124,13 +156,17 @@ public class SshExecution {
 						
 					}
 				}
-				return (out != null ? out.toString() : "NO_RESP_RECVD");
+				
 			} catch (IOException e) {
 				log.warn("SSH: Could not execute command ["+unixCmd+"] - " + e.getMessage());
 				
 			}
+			/*finally{
+				mutex.unlock();
+			}*/
+			return (out != null ? out.toString() : SSH_NOT_EXECUTED);
 		}
-		return "NO_RESP_RECVD";
+		return SSH_NOT_CONNECTED;
 	}
 	
 	/**
@@ -177,19 +213,29 @@ public class SshExecution {
 			sshConnection.close();
 			sshConnection = null;
 		}
+		/*mutex.lock();
+		try{
+			
+			produced.signal();
+		}
+		finally{
+			mutex.unlock();
+		}*/
 		synchronized (sent) {
 			sent.notify();
 		}
 	}
 	
-	private void init(String host, String user, String password) throws GeneralException{
+	private void init(String host, String user, String password) throws SystemException{
 		if (sshConnection == null || !connected || !sshConnection.isAuthenticationComplete()) {
 			end();
 			sshConnection = new Connection(host);
 			
 			try {
-				sshConnection.connect();
+				
+				sshConnection.connect(null, 15000, 0);
 				synchronized (this) {
+					
 					connected = sshConnection.authenticateWithPassword(user, password);
 				}
 				if (connected) {
@@ -214,17 +260,18 @@ public class SshExecution {
 						synchronized (this) {
 							connected = false;
 						}
-						throw new GeneralException("SSH: Could not establish session");
+						throw new SystemException(SSH_NO_SESSION);
 					}
 				}
 				else{
-					throw new GeneralException("SSH: Could not authenticate");
+					throw new SystemException(SSH_NOT_AUTHENTICATED);
 				}
 			} catch (IOException e) {
 				synchronized (this) {
 					connected = false;
 				}
-				throw new GeneralException(e);
+				log.error(e, e);
+				throw new SystemException(SSH_NOT_CONNECTED);
 			}
 			finally{
 				if(!connected){
@@ -235,19 +282,14 @@ public class SshExecution {
 		
 	}
 	
-	Runnable runReader(){
-		return reader;
-		
-	}
-	
 	/**
 	 * 
 	 * @param hostServer
 	 * @param sshUser
 	 * @param password
-	 * @throws GeneralException
+	 * @throws SystemException
 	 */
-	public SshExecution(String hostServer, String sshUser, String password) throws GeneralException{
+	public SshExecution(String hostServer, String sshUser, String password) throws SystemException{
 		init(hostServer, sshUser, password);
 		threads.execute(reader);
 	}
@@ -257,9 +299,9 @@ public class SshExecution {
 	 * -u [username] 
 	 * -p [password]
 	 * @param strings
-	 * @throws GeneralException 
+	 * @throws SystemException 
 	 */
-	public SshExecution(String...options) throws GeneralException{
+	public SshExecution(String...options) throws SystemException{
 		String host = Config.getOption("h", options);
 		String user = Config.getOption("u", options);
 		String password = Config.getOption("p", options);
@@ -270,9 +312,11 @@ public class SshExecution {
 	public static void main(String...s){
 		SshExecution ssh = null;
 		try {
+			//
+			//169.144.107.94
 			ssh = new SshExecution("-h","169.144.107.94","-u","root","-p","red32hat");
-			System.out.println("response: "+ssh.runCommand("ps -eaf|grep -i 'java'|wc -l"));
-		} catch (GeneralException e) {
+			System.out.println("response: "+ssh.runCommand("ifconfig"));
+		} catch (SystemException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

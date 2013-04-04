@@ -1,5 +1,6 @@
 package com.egi.datacollector.util.actors;
 
+import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
@@ -18,7 +19,9 @@ import akka.routing.SmallestMailboxRouter;
 import com.egi.datacollector.listener.cluster.ClusterListener;
 import com.egi.datacollector.processor.Processor;
 import com.egi.datacollector.processor.ProcessorFactory;
+import com.egi.datacollector.processor.file.RecordData;
 import com.egi.datacollector.processor.smpp.SmppData;
+import com.egi.datacollector.util.Config;
 import com.hazelcast.core.EntryEvent;
 import com.logica.smpp.pdu.PDUException;
 
@@ -27,15 +30,15 @@ import com.logica.smpp.pdu.PDUException;
  * @author esutdal
  *
  */
-class SmppProcessorActor extends UntypedActor {
+class ProcessorActor extends UntypedActor {
 	
-	private static final Logger log = Logger.getLogger(SmppProcessorActor.class);
+	private static final Logger log = Logger.getLogger(ProcessorActor.class);
 	
 	private ActorRef worker = null;
 	
-	public SmppProcessorActor(){
+	public ProcessorActor(){
 		super();
-		worker = getContext().actorOf(new Props(Worker.class).withDispatcher("datacollector").withRouter(new SmallestMailboxRouter(10)));
+		worker = getContext().actorOf(new Props(Worker.class).withDispatcher("datacollector").withRouter(new SmallestMailboxRouter(Config.getNoOfProcessorActors())));
 	}
 
 	
@@ -82,7 +85,13 @@ class SmppProcessorActor extends UntypedActor {
 					SmppData job = ((SmppData) data);
 					Processor processor = ProcessorFactory.getProcessor(job);
 					processor.process(job);
-					ClusterListener.instance().removeFromDistributableJobsMap((Long) ((EntryEvent) hazelcastEntry).getKey());
+					ClusterListener.instance().removeFromDistributableJobsMap(((EntryEvent) hazelcastEntry).getKey());
+				}
+				else if(data instanceof RecordData){
+					RecordData job = ((RecordData) data);
+					Processor processor = ProcessorFactory.getProcessor(job);
+					processor.process(job);
+					ClusterListener.instance().removeFromDistributableJobsMap(((EntryEvent) hazelcastEntry).getKey());
 				}
 			}
 									
@@ -92,15 +101,15 @@ class SmppProcessorActor extends UntypedActor {
 		@Override
 		public void preRestart(Throwable reason, Option<Object> message){
 			//send it to the supervisor so that it can be enqueued once again to retry
-			if(reason.getCause() instanceof PDUException){
-	    		  log.error("Not retrying since there seems to be a problem with the PDU itself!");
-	    		  super.preRestart(reason, message);
+			if(reason.getCause() instanceof PDUException || reason.getCause() instanceof SQLException){ 
+	    		  log.error("Not retrying since there seems to be a problem with the data itself!");
+	    		  //super.preRestart(reason, message);
 	    		  
 	    	}
 			else{
 				log.warn("Trying to redo a processing");
 				getSender().tell(message.get(), getSelf());
-				super.preRestart(reason, message);
+				//super.preRestart(reason, message);
 			}
 		}
 		
