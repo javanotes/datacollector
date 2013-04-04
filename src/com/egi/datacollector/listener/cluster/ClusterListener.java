@@ -39,7 +39,7 @@ public class ClusterListener extends Listener implements Runnable {
 	private static final Logger log = Logger.getLogger(ClusterListener.class);
 		
 	private Cluster cluster = null;
-	
+		
 	//we will be needing these for short time tasks.  Since a member addition / removal operation should not occur very frequently
 	private final ExecutorService worker = Executors.newCachedThreadPool(new ThreadFactory() {
 		private int n = 0;

@@ -301,7 +301,25 @@ public class Main {
 		}
 		return LogManager.getRootLogger().getLevel().toString();
 	}
+	public static synchronized void conditionalSleep() throws InterruptedException{
+		if(_instanceLatch != null){
+			while(_instanceLatch.getCount() != 0){
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					
+				}
+			}
+		}
+		_instanceLatch = new CountDownLatch(1);
+		_instanceLatch.await();
+	}
 	
+	public static synchronized void awakeConditionalSleep(){
+		if(_instanceLatch != null){
+			_instanceLatch.countDown();
+		}
+	}
 	/**
 	 * For starting a new instance on the same node
 	 * @param touchFile

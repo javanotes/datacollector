@@ -323,8 +323,8 @@ class Cluster {
 
 			@Override
 			public void entryRemoved(EntryEvent<Object, Object> entryevent) {
-				
-				
+				//this marks the end of a single file processing
+				Main.awakeConditionalSleep();
 			}
 
 			@Override

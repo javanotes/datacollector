@@ -17,6 +17,7 @@ import org.apache.log4j.Logger;
 import com.egi.datacollector.listener.cluster.ClusterListener;
 import com.egi.datacollector.processor.Data;
 import com.egi.datacollector.processor.Processor;
+import com.egi.datacollector.server.Main;
 import com.egi.datacollector.util.Config;
 import com.egi.datacollector.util.Utilities;
 import com.egi.datacollector.util.actors.ActorFramework;
@@ -242,11 +243,23 @@ public class FileProcessor extends Processor {
 				for(String file : fileJob.getFiles()){
 					clear();
 					usingMappedIO(file);
+					try {
+						Main.conditionalSleep();
+					} catch (InterruptedException e) {
+						
+					}
+					log.info("Processing of file " + file + " complete");
 				}
 			} else {
 				for(String file : fileJob.getFiles()){
 					//if(file.contains("HelloWorld123.txt"))
 					usingBuffReader(file);
+					try {
+						Main.conditionalSleep();
+					} catch (InterruptedException e) {
+						
+					}
+					log.info("Processing of file " + file + " complete");
 				}
 				
 			}
