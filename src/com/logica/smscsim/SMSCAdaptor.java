@@ -12,11 +12,13 @@ package com.logica.smscsim;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.log4j.Logger;
 
 import com.egi.datacollector.util.Config;
 import com.logica.smpp.Connection;
@@ -51,6 +53,8 @@ public class SMSCAdaptor extends SmppObject implements Runnable
     private Connection serverConn = null;
     private int port;
     
+    private static final Logger log = Logger.getLogger(SMSCAdaptor.class);
+    
     private long acceptTimeout = com.logica.smpp.Data.ACCEPT_TIMEOUT;
     private PDUProcessorFactory processorFactory = null;
     private boolean keepReceiving = true;
@@ -65,8 +69,25 @@ public class SMSCAdaptor extends SmppObject implements Runnable
     public SMSCAdaptor(int port)
     {
         this.port = port;
+        
+        threadPool = new ThreadPoolExecutor(Config.getSmppMaxConnSize(), 
+				Config.getSmppMaxConnSize(), 
+				0, 
+				TimeUnit.SECONDS, 
+				new LinkedBlockingQueue<Runnable>(), 
+				new ThreadFactory() {
+					
+			    	private AtomicInteger n = new AtomicInteger();
+					@Override
+					public Thread newThread(Runnable r) {
+						
+						return new Thread(r, "datacollector.smpp.request-"+n.getAndIncrement());
+					}
+				});
+        
+        threadPool.allowCoreThreadTimeOut(true);
     }
-    
+      
         
     /**
      * Constructor with control if the listener starts as a separate thread.
@@ -82,6 +103,23 @@ public class SMSCAdaptor extends SmppObject implements Runnable
     {
         this.port = port;
         this.asynchronous = asynchronous;
+                
+        threadPool = new ThreadPoolExecutor(Config.getSmppMaxConnSize(), 
+				Config.getSmppMaxConnSize(), 
+				60, 
+				TimeUnit.SECONDS, 
+				new LinkedBlockingQueue<Runnable>(), 
+				new ThreadFactory() {
+					
+			    	private AtomicInteger n = new AtomicInteger();
+					@Override
+					public Thread newThread(Runnable r) {
+						
+						return new Thread(r, "datacollector.smpp.request-"+n.getAndIncrement());
+					}
+				});
+        
+        threadPool.allowCoreThreadTimeOut(true); 
     }
     
     /**
@@ -94,23 +132,23 @@ public class SMSCAdaptor extends SmppObject implements Runnable
     public synchronized void start()
     throws IOException
     {
-        debug.write("going to start SMSCListener on port "+port);
+        log.info("Starting SMPP transport");
         if (!isReceiving) {
             serverConn = new TCPIPConnection(port);
             serverConn.setReceiveTimeout(getAcceptTimeout());
             serverConn.open();
             keepReceiving = true;
             if (asynchronous) {
-                debug.write("starting listener in separate thread.");
+            	log.debug("starting listener in separate thread.");
                 Thread serverThread = new Thread(this, "datacollector.smpp.listener");
                 serverThread.start();
-                debug.write("listener started in separate thread.");
+                log.debug("listener started in separate thread.");
             } else {
-                debug.write("going to listen in the context of current thread.");
+            	log.debug("going to listen in the context of current thread.");
                 run();
             }
         } else {
-            debug.write("already receiving, not starting the listener.");
+        	log.warn("already receiving, not starting the listener.");
         }
     }
     
@@ -125,7 +163,7 @@ public class SMSCAdaptor extends SmppObject implements Runnable
     public synchronized void stop()
     throws IOException
     {
-        debug.write("going to stop SMSCListener on port "+port);
+    	log.info("Stopping SMPP transport on port "+port);
         keepReceiving = false;
         if (serverConn != null) {
 			serverConn.close();
@@ -137,13 +175,15 @@ public class SMSCAdaptor extends SmppObject implements Runnable
 				}
             }
 		}
-		threadPool.shutdown();
-        try {
-			threadPool.awaitTermination(1L, TimeUnit.MINUTES);
-		} catch (InterruptedException e) {
-			
+		if (threadPool != null) {
+			threadPool.shutdown();
+			try {
+				threadPool.awaitTermination(1L, TimeUnit.MINUTES);
+			} catch (InterruptedException e) {
+
+			}
 		}
-        debug.write("SMSCListener stopped on port "+port);
+		log.info("Stopped SMPP transport");
     }
     
     /**
@@ -156,7 +196,7 @@ public class SMSCAdaptor extends SmppObject implements Runnable
      */
     public void run()
     {
-        debug.enter(this, "run of SMSCListener on port "+port);
+    	log.info("Running SMPP transport on port "+port);
         isReceiving = true;
         try {
             while (keepReceiving) {
@@ -172,50 +212,7 @@ public class SMSCAdaptor extends SmppObject implements Runnable
         debug.exit(this);
     }
     
-    private final ExecutorService threadPool = /*new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), 
-    																	Config.getSmppMaxConnSize(), 
-    																	60, 
-    																	TimeUnit.SECONDS, 
-    																	new ArrayBlockingQueue<Runnable>(Config.getSmppMaxConnSize()), 
-    																	new ThreadFactory() {
-    																		
-    																    	private AtomicInteger n = new AtomicInteger();
-    																		@Override
-    																		public Thread newThread(Runnable r) {
-    																			
-    																			return new Thread(r, "datacollector.smpp.request-"+n.getAndIncrement());
-    																		}
-    																	}, 
-    																	new RejectedExecutionHandler(){
-
-																			@Override
-																			public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-																				
-																				System.err.println("SMSCAdaptor::Request rejected");
-																			}
-    																		
-    																	});*/
-    
-											    Config.getSmppMaxConnSize() == 0 ? Executors.newCachedThreadPool(new ThreadFactory() {
-													
-											    	private AtomicInteger n = new AtomicInteger();
-													@Override
-													public Thread newThread(Runnable r) {
-														
-														return new Thread(r, "datacollector.smpp.request-"+n.getAndIncrement());
-													}
-												})
-												
-												:
-													Executors.newFixedThreadPool(Config.getSmppMaxConnSize(), new ThreadFactory() {
-														
-												    	private AtomicInteger n = new AtomicInteger();
-														@Override
-														public Thread newThread(Runnable r) {
-															
-															return new Thread(r, "datacollector.smpp.request-"+n.getAndIncrement());
-														}
-													});
+    private ThreadPoolExecutor threadPool = null;
     
     /**
      * The "one" listen attempt called from <code>run</code> method.
@@ -240,7 +237,7 @@ public class SMSCAdaptor extends SmppObject implements Runnable
             connection = serverConn.accept();
 
             if (connection != null) {
-                debug.write("SMSCListener accepted a connection on port "+port);
+            	log.info("SMSCAdaptor accepted a connection on port "+port);
                 SMSCSession session = new SMSCSession(connection);
                 PDUProcessor pduProcessor = null;
                 if (processorFactory != null) {
@@ -250,7 +247,7 @@ public class SMSCAdaptor extends SmppObject implements Runnable
                 //Thread thread = new Thread(session);
                 //thread.start();
                 threadPool.submit(session);
-                debug.write("SMSCListener launched a session on the accepted connection.");
+                log.info("SMSCAdaptor launched a session on the accepted connection.");
             } else {
                 debug.write(Simulator.DSIMD2, "no connection accepted this time.");
             }

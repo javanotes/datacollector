@@ -3,6 +3,11 @@ package com.egi.datacollector.processor.file;
 import com.egi.datacollector.processor.Data;
 import com.egi.datacollector.util.Constants;
 
+/**
+ * Holds each record in a file
+ * @author esutdal
+ *
+ */
 public class RecordData implements Data {
 	
 	public static RecordData endOfFile(){
@@ -32,4 +37,5 @@ public class RecordData implements Data {
 		return aRecord;
 	}
 
+	
 }

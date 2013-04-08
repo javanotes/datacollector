@@ -11,22 +11,25 @@ import com.egi.datacollector.server.Main;
 import com.egi.datacollector.util.Config;
 import com.egi.datacollector.util.Constants;
 import com.egi.datacollector.util.actors.ActorFramework;
+import com.egi.datacollector.util.exception.ClusterException;
 import com.egi.datacollector.util.exception.SystemException;
 import com.egi.datacollector.util.ssh.SshExecution;
-
 import com.hazelcast.config.FileSystemXmlConfig;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryEventType;
 import com.hazelcast.core.EntryListener;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.ICountDownLatch;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
 import com.hazelcast.core.IMap;
+import com.hazelcast.core.InstanceDestroyedException;
 import com.hazelcast.core.LifecycleEvent;
 import com.hazelcast.core.LifecycleEvent.LifecycleState;
 import com.hazelcast.core.LifecycleListener;
 import com.hazelcast.core.Member;
+import com.hazelcast.core.MemberLeftException;
 import com.hazelcast.core.MembershipListener;
 import com.hazelcast.core.MessageListener;
 import com.hazelcast.impl.MemberImpl;
@@ -70,10 +73,76 @@ class Cluster {
 	static final String FTP_LOCK = "FTP_LOCK";
 	static final String SMPP_LOCK = "SMPP_LOCK";
 	static final String CLUSTER_LOCK = "CLUSTER_LOCK";
+	static final String BARRIER_LATCH = "BARRIER_LATCH";
 	
 	private static final Logger log = Logger.getLogger(Cluster.class);
 	
 	private static HazelcastInstance hazelcast = null;
+	
+	boolean latch() {
+		if(isRunning()){
+			ICountDownLatch latch = hazelcast.getCountDownLatch(BARRIER_LATCH);
+			if(latch != null){
+				return latch.setCount(noOfMembers());
+			}
+		}
+		return false;
+	}
+	boolean latch(int count){
+		if(isRunning()){
+			ICountDownLatch latch = hazelcast.getCountDownLatch(BARRIER_LATCH);
+			if(latch != null){
+				return latch.setCount(count);
+			}
+		}
+		return false;
+	}
+	void await() throws ClusterException{
+		if(isRunning()){
+			ICountDownLatch latch = hazelcast.getCountDownLatch(BARRIER_LATCH);
+			if(latch != null){
+				try {
+					latch.await();
+				} catch (MemberLeftException e) {
+					log.error("Exception while waiting on latch", e);
+					throw new ClusterException(e);
+				} catch (InstanceDestroyedException e) {
+					log.error("Exception while waiting on latch", e);
+					throw new ClusterException(e);
+				} catch (InterruptedException e) {
+					log.error("Exception while waiting on latch", e);
+					throw new ClusterException(e);
+				}
+			}
+		}
+	}
+	void await(long time, TimeUnit unit) throws ClusterException{
+		if(isRunning()){
+			ICountDownLatch latch = hazelcast.getCountDownLatch(BARRIER_LATCH);
+			if(latch != null){
+				try {
+					latch.await(time, unit);
+				} catch (MemberLeftException e) {
+					log.error("Exception while waiting on latch", e);
+					throw new ClusterException(e);
+				} catch (InstanceDestroyedException e) {
+					log.error("Exception while waiting on latch", e);
+					throw new ClusterException(e);
+				} catch (InterruptedException e) {
+					log.error("Exception while waiting on latch", e);
+					throw new ClusterException(e);
+				}
+			}
+		}
+	}
+	void countdown(){
+		if(isRunning()){
+			ICountDownLatch latch = hazelcast.getCountDownLatch(BARRIER_LATCH);
+			if(latch != null){
+				latch.countDown();
+			}
+		}
+	}
 	
 	/**
 	 * TODO
@@ -81,6 +150,7 @@ class Cluster {
 	 */
 	void tryRestartMember(Member node){
 		if (!node.isLiteMember()) {
+			
 			ILock lock = hazelcast.getLock(CLUSTER_LOCK);
 			SshExecution ssh = null;
 			boolean locked = lock.tryLock();
@@ -312,6 +382,7 @@ class Cluster {
 			@Override
 			public void entryAdded(EntryEvent<Object, Object> entry) {
 				//this is a end-of-file entry. all instances should know it
+				log.info("ADDED");
 				ActorFramework.instance().processDataFromDistributedMap(entry);
 			}
 
@@ -323,15 +394,16 @@ class Cluster {
 
 			@Override
 			public void entryRemoved(EntryEvent<Object, Object> entryevent) {
-				//this marks the end of a single file processing
-				Main.awakeConditionalSleep();
+				
 			}
 
 			@Override
-			public void entryUpdated(EntryEvent<Object, Object> entryevent) {
-				
-				
+			public void entryUpdated(EntryEvent<Object, Object> entry) {
+				//this is a end-of-file entry. all instances should know it
+				log.info("UPDATED");
+				ActorFramework.instance().processDataFromDistributedMap(entry);
 			}
+			
 		}, Constants.EOF, true);
 		
 		if(Config.isClusteredModeEnabled()){
@@ -417,5 +489,6 @@ class Cluster {
 		}
 		
 	}
+	
 
 }

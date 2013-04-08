@@ -9,7 +9,6 @@
 	<classpathentry kind="lib" path="lib/commons-lang3-3.1.jar"/>
 	<classpathentry kind="lib" path="lib/config-1.0.0.jar"/>
 	<classpathentry kind="lib" path="lib/edtftpj.jar"/>
-	<classpathentry kind="lib" path="lib/etl.jar"/>
 	<classpathentry kind="lib" path="lib/ganymed-ssh2-build251beta1.jar"/>
 	<classpathentry kind="lib" path="lib/hazelcast-2.5.jar"/>
 	<classpathentry kind="lib" path="lib/jedis-2.1.0.jar"/>

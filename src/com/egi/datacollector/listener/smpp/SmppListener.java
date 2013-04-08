@@ -51,6 +51,7 @@ public class SmppListener extends Listener implements Runnable {
 										message.getDestAddr().getAddress(), 
 										message.getShortMessage());
 			sms.setSmscGenId(messageId);
+			
 			ActorFramework.instance().submitDataToDistributedMap(sms);
 		}
     }

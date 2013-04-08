@@ -17,10 +17,10 @@ import org.apache.log4j.Logger;
 import com.egi.datacollector.listener.cluster.ClusterListener;
 import com.egi.datacollector.processor.Data;
 import com.egi.datacollector.processor.Processor;
-import com.egi.datacollector.server.Main;
 import com.egi.datacollector.util.Config;
 import com.egi.datacollector.util.Utilities;
 import com.egi.datacollector.util.actors.ActorFramework;
+import com.egi.datacollector.util.exception.ClusterException;
 import com.egi.datacollector.util.exception.ProcessorException;
 
 public class FileProcessor extends Processor {
@@ -92,7 +92,8 @@ public class FileProcessor extends Processor {
 	
 	private void usingMappedIO(String fileName) throws ProcessorException{
 		/*
-		 * TODO consider implementing the reading and writing both using multi-threaded
+		 * not considering implementing the reading and writing using multiple threads for both
+		 * processing accuracy is more important here than processing speed
 		 */
 		if(Utilities.isNullOrBlank(fileName)){
 			throw new ProcessorException("File name is null");
@@ -243,23 +244,36 @@ public class FileProcessor extends Processor {
 				for(String file : fileJob.getFiles()){
 					clear();
 					usingMappedIO(file);
-					try {
-						Main.conditionalSleep();
-					} catch (InterruptedException e) {
-						
+					boolean waiting = ClusterListener.instance().acquireClusterLatch();
+					if(waiting){
+						try {
+							ClusterListener.instance().awaitClusterLatch(1, TimeUnit.HOURS);
+							log.info("Processing of file [" + file + "] complete");
+						} catch (ClusterException e) {
+							log.error("Exception while waiting for file [" +file+ "] processing to get over" , e);
+						}
 					}
-					log.info("Processing of file " + file + " complete");
+					else{
+						log.error("File processing data integrity might be compromised. Unable to acquire latch. Please validate!");
+					}
+					
 				}
 			} else {
 				for(String file : fileJob.getFiles()){
 					//if(file.contains("HelloWorld123.txt"))
 					usingBuffReader(file);
-					try {
-						Main.conditionalSleep();
-					} catch (InterruptedException e) {
-						
+					boolean waiting = ClusterListener.instance().acquireClusterLatch();
+					if(waiting){
+						try {
+							ClusterListener.instance().awaitClusterLatch(1, TimeUnit.HOURS);
+							log.info("Processing of file [" + file + "] complete");
+						} catch (ClusterException e) {
+							log.error("Exception while waiting for file [" +file+ "] processing to get over" , e);
+						}
 					}
-					log.info("Processing of file " + file + " complete");
+					else{
+						log.error("File processing data integrity might be compromised. Unable to acquire latch. Please validate!");
+					}
 				}
 				
 			}

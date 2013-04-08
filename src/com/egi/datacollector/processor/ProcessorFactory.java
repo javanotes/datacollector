@@ -16,10 +16,7 @@ public class ProcessorFactory {
 	
 	private static final Map<String, Processor> processorMap = new HashMap<String, Processor>();
 	
-	public static Processor getProcessor(Data job) throws ProcessorException{
-		String processorClass = "datacollector.processor." + job.type();
-		processorClass = Config.getProperty(processorClass);
-		
+	private static Processor processor(String processorClass) throws ProcessorException{
 		if(!processorMap.containsKey(processorClass)){
 			synchronized (processorMap) {
 				if(!processorMap.containsKey(processorClass)){
@@ -37,6 +34,22 @@ public class ProcessorFactory {
 		}
 		
 		return processorMap.get(processorClass);
+	}
+	
+	public static Processor getProcessor(Class<?> processorClass) throws ProcessorException{
+		return processor(processorClass.getCanonicalName());
+		
+	}
+	
+	public static Processor getProcessor(String type) throws ProcessorException{
+		String processorClass = "datacollector.processor." + type;
+		processorClass = Config.getProperty(processorClass);
+		
+		return processor(processorClass);
+	}
+	
+	public static Processor getProcessor(Data job) throws ProcessorException{
+		return getProcessor(job.type());
 		
 	}
 }

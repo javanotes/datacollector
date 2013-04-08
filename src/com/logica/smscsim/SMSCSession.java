@@ -12,6 +12,8 @@ package com.logica.smscsim;
 
 import java.io.IOException;
 
+import org.apache.log4j.Logger;
+
 import com.logica.smpp.Connection;
 import com.logica.smpp.Data;
 import com.logica.smpp.Receiver;
@@ -51,6 +53,7 @@ implements Runnable
     private Connection connection;
     private long receiveTimeout = Data.RECEIVER_TIMEOUT;
     private boolean keepReceiving = true;
+    private static final Logger log = Logger.getLogger(SMSCSession.class);
     /**
      * Initialises the session with the connection the session
      * should communicate over.
@@ -93,6 +96,7 @@ implements Runnable
     
         //debug.enter(this,"SMSCSession run()");
         //debug.write("SMSCSession starting receiver");
+        log.info("SMSCSession opening connection");
         receiver.start();
         try {
             while (keepReceiving)
@@ -125,6 +129,7 @@ implements Runnable
         try {
             debug.write("SMSCSession closing connection");
             connection.close();
+            log.info("SMSCSession closed connection");
         } catch (IOException e) {
             event.write(e, "closing SMSCSession's connection.");
         }

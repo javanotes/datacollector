@@ -204,8 +204,7 @@ public class FtpListener extends Listener implements Runnable  {
 	
 	@Override
 	public void run() {
-		connect();
-		checkState();
+		
 		boolean download = true;
 		if(onInit){
 			Main._instanceLatchNotify();
@@ -213,6 +212,8 @@ public class FtpListener extends Listener implements Runnable  {
 			download = Config.isFtpDownloadOnInit();
 		}
 		if(download){
+			connect();
+			checkState();
 			log.info("Trying to pull from server");
 			ClusterLock lock = ClusterListener.instance().getFtpLock();
 			if(lock.isLocked()){

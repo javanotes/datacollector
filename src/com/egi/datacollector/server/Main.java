@@ -117,7 +117,7 @@ public class Main {
 	public static void main(final String[] args) {
 		processId = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
 		
-		new Thread("datacollector.bootstrap"){
+		new Thread("datacollector.startup.service"){
 			
 			public void run(){
 				startInstance(args);

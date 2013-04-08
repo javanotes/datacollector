@@ -125,7 +125,7 @@ public class Config {
 		} catch (NumberFormatException e) {
 			
 		}
-		return 0;
+		return 1;
 	}
 	public static int getSMPPListenPort() {
 		

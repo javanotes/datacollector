@@ -1,8 +1,62 @@
 package com.egi.datacollector.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 public class Utilities {
 	
 	private Utilities(){}
+	
+	public static Object deepCopy(Object object){
+		Object cloned = null;
+		if(object != null	){
+			
+			ObjectOutputStream oos = null;
+			ObjectInputStream ois = null;
+			try {
+				try {
+					cloned = object.getClass().newInstance();
+				} catch (Throwable e) {
+					
+				} 
+				
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				oos = new ObjectOutputStream(baos);
+				oos.writeObject(object);
+				
+				ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
+				
+				cloned = ois.readObject();
+				
+			} catch (IOException e) {
+				
+			} catch (ClassNotFoundException e) {
+				
+			}  
+			finally{
+				if(oos != null){
+					try {
+						oos.close();
+					} catch (IOException e) {
+						
+					}
+				}
+				if(ois != null){
+					try {
+						ois.close();
+					} catch (IOException e) {
+						
+					}
+				}
+			}
+			
+		}
+		return cloned;
+		
+	}
 	
 	private static int getOptionPos(String flag, String[] options) {
 	    if (options == null)

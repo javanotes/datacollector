@@ -21,6 +21,7 @@ import com.egi.datacollector.processor.smpp.SmppData;
 import com.egi.datacollector.server.Main;
 import com.egi.datacollector.util.Config;
 import com.egi.datacollector.util.actors.ActorFramework;
+import com.egi.datacollector.util.exception.ClusterException;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
 import com.hazelcast.core.MembershipEvent;
@@ -197,6 +198,24 @@ public class ClusterListener extends Listener implements Runnable {
 		
 	}
 	
+	public boolean acquireClusterLatch(){
+		return cluster.latch();
+	}
+	public boolean acquireClusterLatch(int count){
+		return cluster.latch(count);
+	}
+	
+	public void awaitClusterLatch() throws ClusterException{
+		cluster.await();
+	}
+	
+	public void awaitClusterLatch(long time, TimeUnit unit) throws ClusterException{
+		cluster.await(time, unit);
+	}
+	
+	public void countdownClusterLatch(){
+		cluster.countdown();
+	}
 		
 	/**
 	 * 

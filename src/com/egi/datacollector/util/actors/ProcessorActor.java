@@ -1,11 +1,11 @@
 package com.egi.datacollector.util.actors;
 
-import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
-import scala.Option;
 import scala.concurrent.duration.Duration;
 import akka.actor.ActorRef;
 import akka.actor.OneForOneStrategy;
@@ -17,13 +17,11 @@ import akka.japi.Function;
 import akka.routing.SmallestMailboxRouter;
 
 import com.egi.datacollector.listener.cluster.ClusterListener;
-import com.egi.datacollector.processor.Processor;
-import com.egi.datacollector.processor.ProcessorFactory;
 import com.egi.datacollector.processor.file.RecordData;
-import com.egi.datacollector.processor.smpp.SmppData;
+import com.egi.datacollector.processor.file.RecordsData;
 import com.egi.datacollector.util.Config;
-import com.hazelcast.core.EntryEvent;
-import com.logica.smpp.pdu.PDUException;
+import com.egi.datacollector.util.actors.messages.Clear;
+import com.egi.datacollector.util.actors.messages.Key;
 
 /**
  * A retry implemented actor for executing processing
@@ -38,13 +36,39 @@ class ProcessorActor extends UntypedActor {
 	
 	public ProcessorActor(){
 		super();
-		worker = getContext().actorOf(new Props(Worker.class).withDispatcher("datacollector").withRouter(new SmallestMailboxRouter(Config.getNoOfProcessorActors())));
+		worker = getContext().actorOf(new Props(WorkerActor.class).withDispatcher("datacollector").withRouter(new SmallestMailboxRouter(Config.getNoOfProcessorActors())));
 	}
 
-	
+	private final List<Object> entryKeys = new ArrayList<Object>();
+	private final RecordsData records = new RecordsData();
+		
 	@Override
-	public void onReceive(Object arg0) throws Exception {
-		worker.tell(arg0, getSelf());
+	public void onReceive(Object msg) throws Exception {
+		if(msg instanceof Key){
+			entryKeys.add(((Key)msg).key);
+		}
+		else if(msg instanceof Clear){
+			if(!entryKeys.isEmpty()){
+				for(Object entryKey : entryKeys){
+					ClusterListener.instance().removeFromDistributableJobsMap(entryKey);
+				}
+				entryKeys.clear();
+			}
+			ClusterListener.instance().countdownClusterLatch();
+		}
+		else if(msg instanceof RecordData){
+			
+			if(((RecordData) msg).isEof()){
+				worker.tell(records.copy(), getSelf());
+				records.clear();
+			}
+			else{
+				records.add((RecordData) msg);
+			}
+		}
+		else{
+			worker.tell(msg, getSelf());
+		}
 
 	}
 	
@@ -72,47 +96,7 @@ class ProcessorActor extends UntypedActor {
 	public SupervisorStrategy supervisorStrategy() {
 	  return strategy;
 	}
-		
 	
-	private static class Worker extends UntypedActor{
-
-		@SuppressWarnings({ "rawtypes"})
-		@Override
-		public void onReceive(Object hazelcastEntry) throws Exception {
-			if(hazelcastEntry instanceof EntryEvent){
-				Object data = ((EntryEvent) hazelcastEntry).getValue();
-				if(data instanceof SmppData){
-					SmppData job = ((SmppData) data);
-					Processor processor = ProcessorFactory.getProcessor(job);
-					processor.process(job);
-					ClusterListener.instance().removeFromDistributableJobsMap(((EntryEvent) hazelcastEntry).getKey());
-				}
-				else if(data instanceof RecordData){
-					RecordData job = ((RecordData) data);
-					Processor processor = ProcessorFactory.getProcessor(job);
-					processor.process(job);
-					ClusterListener.instance().removeFromDistributableJobsMap(((EntryEvent) hazelcastEntry).getKey());
-				}
-			}
-									
-		}
-		
-				
-		@Override
-		public void preRestart(Throwable reason, Option<Object> message){
-			//send it to the supervisor so that it can be enqueued once again to retry
-			if(reason.getCause() instanceof PDUException || reason.getCause() instanceof SQLException){ 
-	    		  log.error("Not retrying since there seems to be a problem with the data itself!");
-	    		  //super.preRestart(reason, message);
-	    		  
-	    	}
-			else{
-				log.warn("Trying to redo a processing");
-				getSender().tell(message.get(), getSelf());
-				//super.preRestart(reason, message);
-			}
-		}
-		
-	}
+	
 
 }
