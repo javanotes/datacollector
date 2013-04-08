@@ -116,7 +116,7 @@ public class FileProcessor extends Processor {
 			
 			if (byteBuffer != null) {
 				
-				final BlockingQueue<byte[]> stream = new LinkedBlockingQueue<>();
+				final BlockingQueue<byte[]> stream = new LinkedBlockingQueue<byte[]>();
 				Thread _localThread = new Thread("datacollector.file.reader") {
 
 					public void run() {
@@ -203,7 +203,7 @@ public class FileProcessor extends Processor {
 			while((nextLine = buffer.readLine()) != null){
 				record = new RecordData(nextLine);
 				if(Config.useMapReduceFunction()){
-					//do map reduce
+					//TODO
 					
 				}
 				else{
@@ -244,6 +244,9 @@ public class FileProcessor extends Processor {
 					clear();
 					usingMappedIO(file);
 					try {
+						//wait for this file processing to be complete
+						//since the job is distributed across cluster
+						//we don't want any surprises by running parallel file processing!
 						Main.conditionalSleep();
 					} catch (InterruptedException e) {
 						
@@ -255,6 +258,9 @@ public class FileProcessor extends Processor {
 					//if(file.contains("HelloWorld123.txt"))
 					usingBuffReader(file);
 					try {
+						//wait for this file processing to be complete
+						//since the job is distributed across cluster
+						//we don't want any surprises by running parallel file processing!
 						Main.conditionalSleep();
 					} catch (InterruptedException e) {
 						
@@ -268,6 +274,12 @@ public class FileProcessor extends Processor {
 			throw new ProcessorException("Invalid job type: "+job.getClass().getName());
 		}
 		return true;
+	}
+
+	@Override
+	public void postProcess() throws ProcessorException {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

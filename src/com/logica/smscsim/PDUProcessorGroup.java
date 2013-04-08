@@ -29,7 +29,7 @@ public class PDUProcessorGroup
      */
     public PDUProcessorGroup()
     {
-        processors = new ArrayList<>();
+        processors = new ArrayList<PDUProcessor>();
     }
     
     /**
@@ -37,7 +37,7 @@ public class PDUProcessorGroup
      */
     public PDUProcessorGroup(int initSize)
     {
-        processors = new ArrayList<>(initSize);
+        processors = new ArrayList<PDUProcessor>(initSize);
     }
     
     /**

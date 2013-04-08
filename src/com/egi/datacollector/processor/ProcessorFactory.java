@@ -23,15 +23,23 @@ public class ProcessorFactory {
 		if(!processorMap.containsKey(processorClass)){
 			synchronized (processorMap) {
 				if(!processorMap.containsKey(processorClass)){
-					try {
-						Object processor = Class.forName(processorClass).newInstance();
-						if (processor != null && processor instanceof Processor) {
-							processorMap.put(processorClass, (Processor) processor);
+					
+						try {
+							Object processor = Class.forName(processorClass).newInstance();
+							if (processor != null && processor instanceof Processor) {
+								processorMap.put(processorClass, (Processor) processor);
+							}
+						} catch (InstantiationException e) {
+							log.error("Cannot instantiate processor class!", e);
+							throw new ProcessorException(e);
+						} catch (IllegalAccessException e) {
+							log.error("Cannot instantiate processor class!", e);
+							throw new ProcessorException(e);
+						} catch (ClassNotFoundException e) {
+							log.error("Cannot instantiate processor class!", e);
+							throw new ProcessorException(e);
 						}
-					} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-						log.error("Cannot instantiate processor class!", e);
-						throw new ProcessorException(e);
-					}
+					 
 				}
 			}
 		}

@@ -314,7 +314,7 @@ public class SshExecution {
 		try {
 			//
 			//169.144.107.94
-			ssh = new SshExecution("-h","169.144.107.94","-u","root","-p","red32hat");
+			ssh = new SshExecution("-h","tniportal-dev.egi.ericsson.com","-u","root","-p","red32hat");
 			System.out.println("response: "+ssh.runCommand("ifconfig"));
 		} catch (SystemException e) {
 			// TODO Auto-generated catch block

@@ -61,7 +61,7 @@ public class Table
     public Table()
     {
         fileName = null;
-        records = new LinkedList<>();
+        records = new LinkedList<Record>();
     }
 
     /**

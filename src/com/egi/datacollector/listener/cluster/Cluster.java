@@ -2,6 +2,7 @@ package com.egi.datacollector.listener.cluster;
 
 import java.io.FileNotFoundException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.log4j.Logger;
 
@@ -85,7 +86,7 @@ class Cluster {
 			SshExecution ssh = null;
 			boolean locked = lock.tryLock();
 			if (locked) {
-				String host = node.getInetSocketAddress().getHostString();
+				String host = node.getInetSocketAddress().getHostName();
 				
 				try {
 					ssh = new SshExecution(host, Config.sshUser(), Config.sshPassword());
@@ -210,30 +211,32 @@ class Cluster {
 		return 0;
 		
 	}
-	
-	Object get(String distributedMapName, Object key){
-		if(isRunning()){
 			
-			return hazelcast.getMap(PERSISTENT_JOB_MAP) != null ? hazelcast.getMap(PERSISTENT_JOB_MAP).get(key) : null;
-		}
-		return null;
-		
-	}
-	
 	void remove(String distributedMapName, Object key){
 		if(isRunning()){
-			if(hazelcast.getMap(distributedMapName) != null){
-				hazelcast.getMap(distributedMapName).remove(key);
-				if(key instanceof Long)
-					releaseKey((Long) key);
+			IMap<Object, Object> map = hazelcast.getMap(distributedMapName);
+			if(map != null){
+				try {
+					Object removed = map.tryRemove(key, 1, TimeUnit.SECONDS);
+					if (removed != null && key instanceof Long){
+						releaseKey((Long) key);
+					}
+				} catch (TimeoutException e) {
+					
+				}
+				
+				
 			}
 		}
 	}
 		
 	void put(String distributedMapName, Object key, Object val){
 		if(isRunning()){
-			if(hazelcast.getMap(distributedMapName) != null)
-				hazelcast.getMap(distributedMapName).put(key, val);
+			IMap<Object, Object> map = hazelcast.getMap(distributedMapName);
+			if(map != null){
+				map.tryPut(key, val, 1, TimeUnit.SECONDS);
+			}
+				
 		}
 	}
 	
@@ -283,6 +286,7 @@ class Cluster {
 		IMap<Object, Object> map = hazelcast.getMap(PERSISTENT_JOB_MAP);
 		for(Object key : map.localKeySet()){
 			//a dummy entry event
+			log.info("Processing pending data on startup");
 			EntryEvent<Object, Object> tempEntry = new EntryEvent<Object, Object>(hazelcast.getName(), new MemberImpl(), 1, key, map.get(key));
 			ActorFramework.instance().processDataFromDistributedMap(tempEntry);
 			
@@ -307,6 +311,7 @@ class Cluster {
 		hazelcast.getMap(PERSISTENT_JOB_MAP).addLocalEntryListener(localMapListener);
 		
 		//this is for sort of broadcast messages
+		//listener for only EOF entries
 		hazelcast.getMap(PERSISTENT_JOB_MAP).addEntryListener(new EntryListener<Object, Object>() {
 
 			@Override
@@ -324,6 +329,7 @@ class Cluster {
 			@Override
 			public void entryRemoved(EntryEvent<Object, Object> entryevent) {
 				//this marks the end of a single file processing
+				//for instances not acting as distributor this would have no effect
 				Main.awakeConditionalSleep();
 			}
 
@@ -399,7 +405,7 @@ class Cluster {
 	void put(SmppData smppData) {
 		if(isRunning()){
 			Long key = acquireKey();
-			hazelcast.getMap(PERSISTENT_JOB_MAP).put(key, smppData);
+			put(PERSISTENT_JOB_MAP, key, smppData);
 		}
 		
 	}
@@ -407,13 +413,13 @@ class Cluster {
 	void putMR(RecordData fileRecord){
 		if(isRunning()){
 			Object key = fileRecord.isEof() ? Constants.EOF : acquireKey();
-			hazelcast.getMap(MAPREDUCE_JOB_MAP).put(key, fileRecord);
+			put(MAPREDUCE_JOB_MAP, key, fileRecord);
 		}
 	}
 	void put(RecordData fileRecord) {
 		if(isRunning()){
 			Object key = fileRecord.isEof() ? Constants.EOF : acquireKey();
-			hazelcast.getMap(PERSISTENT_JOB_MAP).put(key, fileRecord);
+			put(PERSISTENT_JOB_MAP, key, fileRecord);
 		}
 		
 	}

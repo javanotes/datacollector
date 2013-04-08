@@ -1,11 +1,6 @@
 package com.egi.datacollector.listener.cluster;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,6 +15,7 @@ import com.egi.datacollector.processor.file.RecordData;
 import com.egi.datacollector.processor.smpp.SmppData;
 import com.egi.datacollector.server.Main;
 import com.egi.datacollector.util.Config;
+import com.egi.datacollector.util.Constants;
 import com.egi.datacollector.util.actors.ActorFramework;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
@@ -131,9 +127,10 @@ public class ClusterListener extends Listener implements Runnable {
 	@SuppressWarnings("unused")
 	@Deprecated
 	private static boolean contestToBringUpASingleNewMember(){
-		/*
+		return false;/*
+		
 		 * This has to be done using a hazelcast cluster lock
-		 */
+		 
 		boolean valid = false;
 		File f = new File(Config.getClusterLockFile());
 		RandomAccessFile raf = null;
@@ -179,7 +176,7 @@ public class ClusterListener extends Listener implements Runnable {
 		}
 		return valid;
 		
-	}
+	*/}
 	
 	public void removeFromDistributableJobsMap(Object entryKey){
 		if(entryKey != null){
@@ -346,7 +343,10 @@ public class ClusterListener extends Listener implements Runnable {
 		@Override
 		public void entryAdded(EntryEvent<Object, Object> entry) {
 			
-			ActorFramework.instance().processDataFromDistributedMap(entry);
+			if(!Constants.EOF.equals(entry.getKey())){
+				//EOF is basically a signal to all nodes that file processing has completed
+				ActorFramework.instance().processDataFromDistributedMap(entry);
+			}
 			
 		}
 

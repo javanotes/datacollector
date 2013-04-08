@@ -91,6 +91,9 @@ class ProcessorActor extends UntypedActor {
 					RecordData job = ((RecordData) data);
 					Processor processor = ProcessorFactory.getProcessor(job);
 					processor.process(job);
+					//Note: we are removing the data. But for a record data, we are most likely to process
+					//the data in batch since this would involve rdbms persistence. So data loss can happen
+					//while actually persisting the records
 					ClusterListener.instance().removeFromDistributableJobsMap(((EntryEvent) hazelcastEntry).getKey());
 				}
 			}

@@ -278,7 +278,7 @@ public class Config {
 	}
 	
 	public static boolean isClusteredModeEnabled(){
-		return "true".equals(getProperty("datacollector.hazelcast.mode.cluster"));
+		return "true".equals(getProperty("datacollector.mode.cluster"));
 	}
 
 	public static long getSmppRetryWait() {

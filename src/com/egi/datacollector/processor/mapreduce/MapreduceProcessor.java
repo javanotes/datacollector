@@ -12,4 +12,10 @@ public class MapreduceProcessor extends Processor {
 		return false;
 	}
 
+	@Override
+	public void postProcess() throws ProcessorException {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

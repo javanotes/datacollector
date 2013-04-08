@@ -82,7 +82,7 @@ public class FtpListener extends Listener implements Runnable  {
 			}
 			try {
 				connection.connect();
-			} catch (FTPException | IOException e) {
+			} catch (FTPException e) {
 				log.warn("FTP did not allow to login with the given credentials! Trying to login anonymously - " + e.getMessage());
 				try {
 					if(connection.isConnected())
@@ -94,7 +94,35 @@ public class FtpListener extends Listener implements Runnable  {
 
 					}
 					connection.connect();
-				} catch (FTPException | IOException e2) {
+				} catch (FTPException e2) {
+					log.error("Cannot connect to FTP server", e2);
+					state.set(State.Error);
+					
+					return;
+				} catch (IOException e2) {
+					log.error("Cannot connect to FTP server", e2);
+					state.set(State.Error);
+					
+					return;
+				}
+			} catch (IOException e) {
+				log.warn("FTP did not allow to login with the given credentials! Trying to login anonymously - " + e.getMessage());
+				try {
+					if(connection.isConnected())
+						connection.disconnect();
+					connection.setUserName("anonymous");
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e1) {
+
+					}
+					connection.connect();
+				} catch (FTPException e2) {
+					log.error("Cannot connect to FTP server", e2);
+					state.set(State.Error);
+					
+					return;
+				} catch (IOException e2) {
 					log.error("Cannot connect to FTP server", e2);
 					state.set(State.Error);
 					
@@ -109,7 +137,9 @@ public class FtpListener extends Listener implements Runnable  {
 			}
 			try {
 				connection.setContentType(FTPTransferType.ASCII);
-			} catch (IOException | FTPException e) {
+			} catch (FTPException e) {
+				log.warn("Could not set connection property - ASCII");
+			} catch (IOException e) {
 				log.warn("Could not set connection property - ASCII");
 			}
 			log.info("Connected to Ftp server: " + Config.getFtpServerHost());
@@ -146,7 +176,9 @@ public class FtpListener extends Listener implements Runnable  {
 		if(connection != null){
 			try {
 				connection.disconnect();
-			} catch (FTPException | IOException e) {
+			} catch (FTPException e) {
+				
+			} catch (IOException e) {
 				
 			}
 			connection = null;
@@ -247,7 +279,12 @@ public class FtpListener extends Listener implements Runnable  {
 												log.info("Deleted remote file" );
 											}
 											
-										} catch (FTPException | IOException e) {
+										}
+										catch(FTPException e){
+											log.error("Unable to download file: " + remoteFileName);
+											throw new Exception(e);
+										}
+										catch (IOException e) {
 											log.error("Unable to download file: " + remoteFileName);
 											throw new Exception(e);
 										}
@@ -267,7 +304,10 @@ public class FtpListener extends Listener implements Runnable  {
 								try {
 									result.get();
 									
-								} catch (InterruptedException | ExecutionException e) {
+								} catch (InterruptedException e) {
+									log.error(e);
+								}
+								catch (ExecutionException e){
 									log.error(e);
 								}
 							}
@@ -276,7 +316,15 @@ public class FtpListener extends Listener implements Runnable  {
 					else{
 						log.warn("No files found to download");
 					}
-				} catch (FTPException | IOException | ParseException e) {
+				} catch (FTPException e) {
+					log.error("Cannot download file from Ftp server", e);
+					log.info(" +++ If this exception occured while switching to primary, this can be ignored +++ ");
+				}
+				catch (ParseException e){
+					log.error("Cannot download file from Ftp server", e);
+					log.info(" +++ If this exception occured while switching to primary, this can be ignored +++ ");
+				}
+				catch(IOException e){
 					log.error("Cannot download file from Ftp server", e);
 					log.info(" +++ If this exception occured while switching to primary, this can be ignored +++ ");
 				}
@@ -286,7 +334,9 @@ public class FtpListener extends Listener implements Runnable  {
 			if(connection != null && connection.isConnected()){
 				try {
 					connection.disconnect();
-				} catch (FTPException | IOException e) {
+				} catch (FTPException e) {
+					
+				} catch (IOException e) {
 					
 				}
 				connection = null;

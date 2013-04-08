@@ -31,7 +31,7 @@ public class Record
     /**
      * The list of the attributes of this record.
      */
-    private List<Attribute> attributes = new LinkedList<>();
+    private List<Attribute> attributes = new LinkedList<Attribute>();
     
     /**
      * Only default constructor present -- the record is empty by default

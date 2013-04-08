@@ -89,7 +89,7 @@ public class ActorFramework {
 			public Actor create() throws Exception {
 				return new DistributorActor();
 			}
-		}).withDispatcher("datacollector-durable"));
+		}).withDispatcher(com.egi.datacollector.util.Config.isClusteredModeEnabled() ? "datacollector" : "datacollector-durable"));
 	}
 	
 		
