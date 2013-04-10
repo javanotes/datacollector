@@ -19,6 +19,7 @@ import org.apache.log4j.PropertyConfigurator;
 import com.egi.datacollector.listener.Listener;
 import com.egi.datacollector.listener.cluster.ClusterListener;
 import com.egi.datacollector.listener.ftp.FtpListener;
+import com.egi.datacollector.listener.http.HttpListener;
 import com.egi.datacollector.listener.smpp.SmppListener;
 import com.egi.datacollector.loader.keyval.RedisClient;
 import com.egi.datacollector.util.Config;
@@ -211,6 +212,8 @@ public class Main {
 		
 		listeners.add(FtpListener.instance());
 		listeners.add(SmppListener.instance());
+		listeners.add(HttpListener.instance());
+		
 		_instanceLatch = new CountDownLatch(listeners.size());
 		startListeners(false);
 		try {
@@ -221,6 +224,11 @@ public class Main {
 			
 		}
 		log.info("Components started ...");
+	}
+	
+	//TODO
+	public static String getStatusXml(){
+		return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><configuration><environments default=\"1\"></environments></configuration>";
 	}
 	
 	public static void stopInstance(){

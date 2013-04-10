@@ -62,6 +62,7 @@ public class FtpListener extends Listener implements Runnable  {
 		
 	}
 	private void connect(){
+		
 		log.info("Trying to connect to Ftp server");
 		disconnect();
 		if (connection == null) {
@@ -207,6 +208,7 @@ public class FtpListener extends Listener implements Runnable  {
 		
 		boolean download = true;
 		if(onInit){
+			state.set(State.Runnable);
 			Main._instanceLatchNotify();
 			onInit = false;
 			download = Config.isFtpDownloadOnInit();
@@ -310,7 +312,7 @@ public class FtpListener extends Listener implements Runnable  {
 	}
 	@Override
 	public boolean isListening() {
-		return state.get() == State.Running;
+		return state.get() == State.Runnable || state.get() == State.Running;
 	}
 
 }

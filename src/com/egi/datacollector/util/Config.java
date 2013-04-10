@@ -329,4 +329,22 @@ public class Config {
 		}
 		return 0;
 	}
+
+	public static int getHTTPListenPort() {
+		try {
+			return Integer.parseInt(getProperty("datacollector.listener.http.port"));
+		} catch (NumberFormatException e) {
+			
+		}
+		return 0;
+	}
+
+	public static int getHTTPMaxConn() {
+		try {
+			return Integer.parseInt(getProperty("datacollector.listener.http.max_conn"));
+		} catch (NumberFormatException e) {
+			
+		}
+		return 0;
+	}
 }

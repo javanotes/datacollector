@@ -85,7 +85,6 @@ class ProcessorActor extends UntypedActor {
 		    	   * We handle this as as:
 		    	   * The erring child has already given up  its message to the supervisor. So this message will again be sent to any of the 
 		    	   * workers (and thus attempted to be re-processed)
-		    	  
 		    	   */
 		    	 return SupervisorStrategy.restart();
 		    	 		        
