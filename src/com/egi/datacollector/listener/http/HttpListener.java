@@ -2,6 +2,7 @@ package com.egi.datacollector.listener.http;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
@@ -82,8 +83,7 @@ public class HttpListener extends Listener implements Runnable{
 
 	private void init(){
 		try {
-			server = HttpServer.create();
-			server.bind(new InetSocketAddress(Config.getHTTPListenPort()), Config.getHTTPMaxConn());
+			server = HttpServer.create(new InetSocketAddress(Config.getHTTPListenPort()), Config.getHTTPMaxConn());
 			server.createContext("/datacollector", new RequestHandler());
 			
 			threadPool = Executors.newCachedThreadPool(new ThreadFactory() {
@@ -97,7 +97,13 @@ public class HttpListener extends Listener implements Runnable{
 			server.start();
 			log.info("Started HTTP transport on port " + Config.getHTTPListenPort());
 			state.set(State.Running);
-		} catch (IOException e) {
+		} 
+		catch (BindException e) {
+			state.set(State.Init);
+			log.warn(e.getMessage());
+			
+		}
+		catch (IOException e) {
 			log.error("Unable to start HTTP transport", e);
 			state.set(State.Error);
 		}

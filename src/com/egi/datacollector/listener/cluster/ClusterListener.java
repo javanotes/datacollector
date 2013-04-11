@@ -416,6 +416,9 @@ public class ClusterListener extends Listener implements Runnable {
 		return state.get() == State.Running;
 	}
 
+	/*
+	 * TODO Make this extensible
+	 */
 	public void addToDistributableJobsMap(SmppData smppData) {
 		
 		cluster.put(smppData);
