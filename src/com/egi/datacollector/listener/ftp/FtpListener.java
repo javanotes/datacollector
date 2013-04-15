@@ -23,7 +23,7 @@ import com.egi.datacollector.listener.cluster.ClusterListener;
 import com.egi.datacollector.listener.cluster.ClusterLock;
 import com.egi.datacollector.processor.Processor;
 import com.egi.datacollector.processor.ProcessorFactory;
-import com.egi.datacollector.processor.file.FileData;
+import com.egi.datacollector.processor.file.data.FileData;
 import com.egi.datacollector.server.Main;
 import com.egi.datacollector.util.Config;
 import com.egi.datacollector.util.exception.ProcessorException;

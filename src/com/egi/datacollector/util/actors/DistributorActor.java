@@ -3,8 +3,8 @@ package com.egi.datacollector.util.actors;
 import akka.actor.UntypedActor;
 
 import com.egi.datacollector.listener.cluster.ClusterListener;
-import com.egi.datacollector.processor.file.RecordData;
-import com.egi.datacollector.processor.smpp.SmppData;
+import com.egi.datacollector.processor.file.data.RecordData;
+import com.egi.datacollector.processor.smpp.data.SmppData;
 
 /**
  * This will run in the primary only

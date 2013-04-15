@@ -15,8 +15,10 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 
 import com.egi.datacollector.listener.cluster.ClusterListener;
-import com.egi.datacollector.processor.Data;
 import com.egi.datacollector.processor.Processor;
+import com.egi.datacollector.processor.data.Data;
+import com.egi.datacollector.processor.file.data.FileData;
+import com.egi.datacollector.processor.file.data.RecordData;
 import com.egi.datacollector.util.Config;
 import com.egi.datacollector.util.Utilities;
 import com.egi.datacollector.util.actors.ActorFramework;

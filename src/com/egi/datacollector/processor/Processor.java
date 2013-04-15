@@ -1,5 +1,6 @@
 package com.egi.datacollector.processor;
 
+import com.egi.datacollector.processor.data.Data;
 import com.egi.datacollector.util.exception.ProcessorException;
 
 /**

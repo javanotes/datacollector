@@ -9,7 +9,7 @@ import com.egi.datacollector.listener.Listener;
 import com.egi.datacollector.listener.ListenerState.State;
 import com.egi.datacollector.listener.cluster.ClusterListener;
 import com.egi.datacollector.listener.cluster.ClusterLock;
-import com.egi.datacollector.processor.smpp.SmppData;
+import com.egi.datacollector.processor.smpp.data.SmppData;
 import com.egi.datacollector.server.Main;
 import com.egi.datacollector.util.Config;
 import com.egi.datacollector.util.actors.ActorFramework;

@@ -15,13 +15,13 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActorFactory;
 
-import com.egi.datacollector.processor.file.RecordData;
+import com.egi.datacollector.processor.file.data.RecordData;
 import com.egi.datacollector.processor.mapreduce.IMapper;
 import com.egi.datacollector.processor.mapreduce.IReducer;
 import com.egi.datacollector.processor.mapreduce.KeyValue;
 import com.egi.datacollector.processor.mapreduce.messages.EndProduceMsg;
 import com.egi.datacollector.processor.mapreduce.messages.InputDataMsg;
-import com.egi.datacollector.processor.smpp.SmppData;
+import com.egi.datacollector.processor.smpp.data.SmppData;
 import com.egi.datacollector.util.actors.mapreduce.MasterActor;
 import com.hazelcast.core.EntryEvent;
 import com.typesafe.config.Config;

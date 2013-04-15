@@ -17,8 +17,8 @@ import akka.japi.Function;
 import akka.routing.SmallestMailboxRouter;
 
 import com.egi.datacollector.listener.cluster.ClusterListener;
-import com.egi.datacollector.processor.file.RecordData;
-import com.egi.datacollector.processor.file.RecordsData;
+import com.egi.datacollector.processor.file.data.RecordData;
+import com.egi.datacollector.processor.file.data.RecordsData;
 import com.egi.datacollector.util.Config;
 import com.egi.datacollector.util.actors.messages.Clear;
 import com.egi.datacollector.util.actors.messages.Key;

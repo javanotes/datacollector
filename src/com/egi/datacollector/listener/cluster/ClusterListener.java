@@ -16,8 +16,8 @@ import org.apache.log4j.Logger;
 
 import com.egi.datacollector.listener.Listener;
 import com.egi.datacollector.listener.ListenerState.State;
-import com.egi.datacollector.processor.file.RecordData;
-import com.egi.datacollector.processor.smpp.SmppData;
+import com.egi.datacollector.processor.file.data.RecordData;
+import com.egi.datacollector.processor.smpp.data.SmppData;
 import com.egi.datacollector.server.Main;
 import com.egi.datacollector.util.Config;
 import com.egi.datacollector.util.actors.ActorFramework;

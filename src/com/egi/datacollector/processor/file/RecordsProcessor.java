@@ -1,8 +1,10 @@
 package com.egi.datacollector.processor.file;
 
-import com.egi.datacollector.processor.Data;
 import com.egi.datacollector.processor.Processor;
 import com.egi.datacollector.processor.ProcessorFactory;
+import com.egi.datacollector.processor.data.Data;
+import com.egi.datacollector.processor.file.data.RecordData;
+import com.egi.datacollector.processor.file.data.RecordsData;
 import com.egi.datacollector.util.exception.ProcessorException;
 
 public class RecordsProcessor extends Processor {

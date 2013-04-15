@@ -2,8 +2,9 @@ package com.egi.datacollector.processor.file;
 
 import org.apache.log4j.Logger;
 
-import com.egi.datacollector.processor.Data;
 import com.egi.datacollector.processor.Processor;
+import com.egi.datacollector.processor.data.Data;
+import com.egi.datacollector.processor.file.data.RecordData;
 import com.egi.datacollector.util.exception.ProcessorException;
 
 

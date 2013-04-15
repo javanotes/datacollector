@@ -19,7 +19,7 @@ import com.egi.datacollector.util.exception.SystemException;
 
 /**
  * A wrapper to execute remote scripts via ssh. Try to re-use a single instance as much as possible in a single thread of execution.
- * <i>Note: This class is not thread-safe.</i>
+ * <p><i>Note: This class is NOT thread-safe!</i>
  * @author esutdal
  *
  */
@@ -103,7 +103,7 @@ public class SshExecution {
 							} catch (IOException e) {
 							}
 							if(response != null)
-								out.append(response);
+								out.append(response).append("\n");
 
 						} while (response != null);
 						//consumed.signal();
@@ -170,12 +170,23 @@ public class SshExecution {
 	}
 	
 	/**
-	 * Blocking call. Waits 5 minutes for a response
+	 * Blocking call. Waits indefinitely for a response
 	 * @param unixCmd
 	 * @return
 	 */
 	public String runCommand(String unixCmd){
-		return exec(unixCmd, true, 300000L);
+		return exec(unixCmd, false, 0);
+		
+	}
+	
+	/**
+	 * Blocking call. Waits for a response before a time-out
+	 * @param unixCmd
+	 * @param waitSecs
+	 * @return
+	 */
+	public String runCommand(String unixCmd, long waitSecs){
+		return exec(unixCmd, true, waitSecs * 1000);
 		
 	}
 	
@@ -184,7 +195,7 @@ public class SshExecution {
 	 * @param unixCmd
 	 * @param asyncResponse
 	 */
-	public void runCommandAsync(final String unixCmd, final AsyncResponse asyncResponse){
+	public void runCommand(final String unixCmd, final AsyncResponse asyncResponse){
 		threads.execute(new Runnable() {
 			
 			@Override
@@ -315,7 +326,8 @@ public class SshExecution {
 			//
 			//169.144.107.94
 			ssh = new SshExecution("-h","169.144.107.94","-u","root","-p","red32hat");
-			System.out.println("response: "+ssh.runCommand("ifconfig"));
+			//ssh = new SshExecution("-h","localhost","-u","esutdal","-p","Password2$");
+			System.out.println("response: "+ssh.runCommand("ifconfig", 5));
 		} catch (SystemException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

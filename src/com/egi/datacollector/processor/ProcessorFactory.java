@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import com.egi.datacollector.processor.data.Data;
 import com.egi.datacollector.util.Config;
 import com.egi.datacollector.util.exception.ProcessorException;
 
