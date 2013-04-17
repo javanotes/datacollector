@@ -245,7 +245,7 @@ public class ClusterListener extends Listener implements Runnable {
 	}
 		
 	/**
-	 * 
+	 * To get notifications for member events
 	 * @author esutdal
 	 *
 	 */

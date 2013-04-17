@@ -94,7 +94,7 @@ public class FileProcessor extends Processor {
 	
 	private void usingMappedIO(String fileName) throws ProcessorException{
 		/*
-		 * not considering implementing the reading and writing using multiple threads for both
+		 * not considering implementing the reading and writing using multiple threads for both.
 		 * processing accuracy is more important here than processing speed
 		 */
 		if(Utilities.isNullOrBlank(fileName)){
@@ -156,7 +156,7 @@ public class FileProcessor extends Processor {
 					try {
 						stream.put(nextBlock);
 					} catch (InterruptedException e) {
-						log.warn(e.getMessage());
+						log.warn("A possible data loss occured! Line not processed");
 					}
 
 				}

@@ -382,7 +382,6 @@ class Cluster {
 			@Override
 			public void entryAdded(EntryEvent<Object, Object> entry) {
 				//this is a end-of-file entry. all instances should know it
-				log.info("ADDED");
 				ActorFramework.instance().processDataFromDistributedMap(entry);
 			}
 
@@ -400,13 +399,15 @@ class Cluster {
 			@Override
 			public void entryUpdated(EntryEvent<Object, Object> entry) {
 				//this is a end-of-file entry. all instances should know it
-				log.info("UPDATED");
 				ActorFramework.instance().processDataFromDistributedMap(entry);
 			}
 			
 		}, Constants.EOF, true);
 		
 		if(Config.isClusteredModeEnabled()){
+			/**
+			 * Adding a partition service for handling entry migration
+			 */
 			partitionService = hazelcast.getPartitionService();
 			partitionService.addMigrationListener(new MigrationListener() {
 				
@@ -467,7 +468,10 @@ class Cluster {
 		
 	}
 
-	
+	/**
+	 * Adding a job to the distributed Map
+	 * @param smppData
+	 */
 	void put(SmppData smppData) {
 		if(isRunning()){
 			Long key = acquireKey();
