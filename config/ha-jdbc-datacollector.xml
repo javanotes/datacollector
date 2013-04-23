@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ha-jdbc xmlns="urn:ha-jdbc:cluster:2.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="urn:ha-jdbc:cluster:2.1 ha-jdbc-2.1.0-beta-3.xsd ">
+	<sync id="full">
+		<property name="fetchSize">1000</property>
+	</sync>
+	<sync id="diff">
+		<property name="fetchSize">1000</property>
+		<property name="versionPattern">version</property>
+	</sync>
+	<cluster dialect="mysql" balancer="simple" default-sync="diff" meta-data-cache="shared-lazy">
+		<database id="read" location="..." weight="2">
+			<user>...</user>
+			<password>...</password>
+			<property name="...">...</property>
+			<!-- Additional properties -->
+		</database>
+		<database id="write" location="..." weight="1">
+			<user>...</user>
+			<password>...</password>
+			<property name="...">...</property>
+			<!-- Additional properties -->
+		</database>
+	</cluster>
+</ha-jdbc>

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema elementFormDefault="qualified" version="1.0" targetNamespace="urn:ha-jdbc:cluster:2.1" xmlns:tns="urn:ha-jdbc:cluster:2.1" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="ha-jdbc" type="tns:databaseClusterConfiguration"/>
+
+  <xs:complexType name="databaseClusterConfiguration">
+    <xs:complexContent>
+      <xs:extension base="tns:abstractDatabaseClusterConfiguration">
+        <xs:sequence>
+          <xs:element name="cluster" type="tns:nestedConfiguration"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="abstractDatabaseClusterConfiguration" abstract="true">
+    <xs:sequence>
+      <xs:element name="distributable" type="tns:commandDispatcherFactoryDescriptor" minOccurs="0"/>
+      <xs:element name="sync" type="tns:synchronizationStrategyDescriptor" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="state" type="tns:stateManagerFactoryDescriptor" minOccurs="0"/>
+      <xs:element name="lock" type="tns:lockManagerFactoryDescriptor" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="nestedConfiguration">
+    <xs:complexContent>
+      <xs:extension base="tns:abstractNestedConfiguration">
+        <xs:sequence>
+          <xs:element name="database" type="tns:database" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="abstractNestedConfiguration" abstract="true">
+    <xs:sequence/>
+    <xs:attribute name="balancer" type="xs:string"/>
+    <xs:attribute name="meta-data-cache" type="xs:string"/>
+    <xs:attribute name="dialect" type="xs:string"/>
+    <xs:attribute name="durability" type="xs:string"/>
+    <xs:attribute name="transaction-mode" type="tns:transactionModeEnum"/>
+    <xs:attribute name="auto-activate-schedule" type="xs:string"/>
+    <xs:attribute name="failure-detect-schedule" type="xs:string"/>
+    <xs:attribute name="eval-current-date" type="xs:boolean"/>
+    <xs:attribute name="eval-current-time" type="xs:boolean"/>
+    <xs:attribute name="eval-current-timestamp" type="xs:boolean"/>
+    <xs:attribute name="eval-rand" type="xs:boolean"/>
+    <xs:attribute name="detect-identity-columns" type="xs:boolean"/>
+    <xs:attribute name="detect-sequences" type="xs:boolean"/>
+    <xs:attribute name="allow-empty-cluster" type="xs:boolean"/>
+    <xs:attribute name="default-sync" type="xs:IDREF" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="database">
+    <xs:complexContent>
+      <xs:extension base="tns:abstractDatabase">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="abstractDatabase" abstract="true">
+    <xs:sequence>
+      <xs:element name="user" type="xs:string" minOccurs="0"/>
+      <xs:element name="password" type="xs:string" minOccurs="0"/>
+      <xs:element name="property" type="tns:property" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string" use="required"/>
+    <xs:attribute name="location" type="xs:string" use="required"/>
+    <xs:attribute name="weight" type="xs:int"/>
+    <xs:attribute name="local" type="xs:boolean"/>
+  </xs:complexType>
+
+  <xs:complexType name="property">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="synchronizationStrategyDescriptor">
+    <xs:complexContent>
+      <xs:extension base="tns:identifiableServiceDescriptor">
+        <xs:sequence/>
+        <xs:attribute name="id" type="xs:ID" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="identifiableServiceDescriptor" abstract="true">
+    <xs:sequence>
+      <xs:element name="property" type="tns:property" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="commandDispatcherFactoryDescriptor">
+    <xs:complexContent>
+      <xs:extension base="tns:identifiableServiceDescriptor">
+        <xs:sequence/>
+        <xs:attribute name="id" type="xs:string"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="stateManagerFactoryDescriptor">
+    <xs:complexContent>
+      <xs:extension base="tns:identifiableServiceDescriptor">
+        <xs:sequence/>
+        <xs:attribute name="id" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="lockManagerFactoryDescriptor">
+    <xs:complexContent>
+      <xs:extension base="tns:identifiableServiceDescriptor">
+        <xs:sequence/>
+        <xs:attribute name="id" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:simpleType name="transactionModeEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="parallel"/>
+      <xs:enumeration value="serial"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
+
