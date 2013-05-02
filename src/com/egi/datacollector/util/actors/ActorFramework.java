@@ -61,7 +61,7 @@ public class ActorFramework {
 
 			@Override
 			public Actor create() throws Exception {
-				return new ProcessorActor();
+				return new SupervisorActor();
 			}
 		}).withDispatcher("datacollector"));
 						
@@ -89,7 +89,7 @@ public class ActorFramework {
 			public Actor create() throws Exception {
 				return new DistributorActor();
 			}
-		}).withDispatcher("datacollector-durable"));
+		}).withDispatcher("datacollector"));
 	}
 	
 		

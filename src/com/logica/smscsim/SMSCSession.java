@@ -38,7 +38,7 @@ import com.logica.smpp.pdu.ValueNotSetException;
  *
  * @author Logica Mobile Networks SMPP Open Source Team
  * @version 1.0, 21 Jun 2001
- * @see SMSCAdaptor
+ * @see SmscAdaptor
  * @see PDUProcessor
  * @see Connection
  * @see Receiver

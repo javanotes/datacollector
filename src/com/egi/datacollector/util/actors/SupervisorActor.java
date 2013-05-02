@@ -24,19 +24,20 @@ import com.egi.datacollector.util.actors.messages.Clear;
 import com.egi.datacollector.util.actors.messages.Key;
 
 /**
- * A retry implemented actor for executing processing
+ * A retry implemented actor for executing processing. It as a supervisor actor
+ * that delegates processing to the worker actor which it supervises and restarts on failure
  * @author esutdal
  *
  */
-class ProcessorActor extends UntypedActor {
+class SupervisorActor extends UntypedActor {
 	
-	private static final Logger log = Logger.getLogger(ProcessorActor.class);
+	private static final Logger log = Logger.getLogger(SupervisorActor.class);
 	
 	private ActorRef worker = null;
 	
-	public ProcessorActor(){
+	public SupervisorActor(){
 		super();
-		worker = getContext().actorOf(new Props(WorkerActor.class).withDispatcher("datacollector").withRouter(new SmallestMailboxRouter(Config.getNoOfProcessorActors())));
+		worker = getContext().actorOf(new Props(SupervisedActor.class).withDispatcher("datacollector").withRouter(new SmallestMailboxRouter(Config.getNoOfProcessorActors())));
 	}
 
 	private final List<Object> entryKeys = new ArrayList<Object>();

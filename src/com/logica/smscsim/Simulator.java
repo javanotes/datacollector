@@ -51,7 +51,7 @@ import com.logica.smscsim.util.Table;
  * @version 1.1, 26 Sep 2001
  * @see SimulatorPDUProcessor
  * @see SimulatorPDUProcessorFactory
- * @see SMSCAdaptor
+ * @see SmscAdaptor
  * @see SMSCSession
  * @see BasicTableParser
  */
@@ -100,7 +100,7 @@ public class Simulator
         new BufferedReader(new InputStreamReader(System.in));
 
     boolean keepRunning = true;
-    private SMSCAdaptor smscListener = null;
+    private SmscAdaptor smscListener = null;
     private SimulatorPDUProcessorFactory factory = null;
     private PDUProcessorGroup processors = null;
     private ShortMessageStore messageStore = null;
@@ -215,7 +215,7 @@ public class Simulator
             System.out.print("Enter port number> ");
             int port = Integer.parseInt(keyboard.readLine());
             System.out.print("Starting listener... ");
-            smscListener = new SMSCAdaptor(port,true);
+            smscListener = new SmscAdaptor(port,true);
             processors = new PDUProcessorGroup();
             messageStore = new ShortMessageStore();
             deliveryInfoSender = new DeliveryInfoSender();

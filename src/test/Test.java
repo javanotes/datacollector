@@ -29,13 +29,15 @@ public class Test {
 	
 	public static final int NO_OF_MSGS = 10;
 	public static final int NO_OF_SESSIONS = 2;
+	public static final int port = 2776;
+	public static final String host = "localhost";
 	
 	static void multiSession(){
 		SMPPSession [] sessions = new SMPPSession[NO_OF_SESSIONS];
 		for(int i=0; i<NO_OF_SESSIONS; i++){
 			SMPPSession session = new SMPPSession();
 	        try {
-	            session.connectAndBind("localhost", 8088, new BindParameter(BindType.BIND_TX, "test", "test", "cp", TypeOfNumber.UNKNOWN, NumberingPlanIndicator.UNKNOWN, null));
+	            session.connectAndBind(host, port, new BindParameter(BindType.BIND_TX, "test", "test", "cp", TypeOfNumber.UNKNOWN, NumberingPlanIndicator.UNKNOWN, null));
 	            sessions[i]=session;
 	        } catch (IOException e) {
 	            System.err.println("Failed connect and bind to host");
@@ -47,6 +49,7 @@ public class Test {
             for (int i = 0; i < NO_OF_MSGS; i++) {
             	
 				try {
+					String message = "Ths is a test text being sent to smsc " + i;
 					String messageId = sessions[i % sessions.length].submitShortMessage("CMT",
 							TypeOfNumber.INTERNATIONAL,
 							NumberingPlanIndicator.UNKNOWN, "1616",
@@ -56,10 +59,11 @@ public class Test {
 							timeFormatter.format(new Date()), null,
 							new RegisteredDelivery(SMSCDeliveryReceipt.DEFAULT),
 							(byte) 0, new GeneralDataCoding(), (byte) 0,
-							"jSMPP simplify SMPP on Java platform".getBytes());
+							message.getBytes());
 					
 					System.out.println("Message submitted, message_id is "
 							+ messageId);
+					
 				} catch (Throwable e) {
 					
 					e.printStackTrace();

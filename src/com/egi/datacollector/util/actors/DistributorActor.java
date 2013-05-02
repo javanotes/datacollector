@@ -16,6 +16,7 @@ class DistributorActor extends UntypedActor {
 		
 	@Override
 	public void onReceive(Object distributableData) throws Exception {
+		
 		if(distributableData instanceof SmppData){
 			ClusterListener.instance().addToDistributableJobsMap((SmppData) distributableData);
 		}

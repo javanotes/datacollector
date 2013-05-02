@@ -18,9 +18,15 @@ import com.egi.datacollector.util.actors.messages.Key;
 import com.hazelcast.core.EntryEvent;
 import com.logica.smpp.pdu.PDUException;
 
-class WorkerActor extends UntypedActor {
+/**
+ * The supervised actor. Would do the actual job of processing and is restarted
+ * by the supervisor on a failure.
+ * @author esutdal
+ *
+ */
+class SupervisedActor extends UntypedActor {
 	
-	private static final Logger log = Logger.getLogger(WorkerActor.class);
+	private static final Logger log = Logger.getLogger(SupervisedActor.class);
 
 	@SuppressWarnings("rawtypes")
 	@Override

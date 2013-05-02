@@ -16,7 +16,7 @@ import com.egi.datacollector.util.actors.ActorFramework;
 import com.logica.smpp.pdu.SubmitSM;
 import com.logica.smscsim.DeliveryInfoSender;
 import com.logica.smscsim.PDUProcessorGroup;
-import com.logica.smscsim.SMSCAdaptor;
+import com.logica.smscsim.SmscAdaptor;
 import com.logica.smscsim.SMSCSession;
 import com.logica.smscsim.ShortMessageStore;
 import com.logica.smscsim.SimulatorPDUProcessor;
@@ -27,7 +27,7 @@ public class SmppListener extends Listener implements Runnable {
 	//private ServerSocketChannel server = null;
 	private static final Logger log = Logger.getLogger(SmppListener.class);
 	
-	private SMSCAdaptor gateway = null;
+	private SmscAdaptor gateway = null;
     private SimulatorPDUProcessorFactory factory = null;
     private PDUProcessorGroup processors = null;
     private ShortMessageStore messageStore = null;
@@ -113,7 +113,7 @@ public class SmppListener extends Listener implements Runnable {
     
     
 	private void init(){
-		gateway = new SMSCAdaptor(Config.getSMPPListenPort(), true);
+		gateway = new SmscAdaptor(Config.getSMPPListenPort(), true);
 		
 		processors = new PDUProcessorGroup();
         messageStore = new SmppMessageStore();

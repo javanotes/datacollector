@@ -48,12 +48,12 @@ import com.logica.smpp.TCPIPConnection;
   26-09-01 ticp@logica.com debug now in a group
 */
 
-public class SMSCAdaptor extends SmppObject implements Runnable
+public class SmscAdaptor extends SmppObject implements Runnable
 {
     private Connection serverConn = null;
     private int port;
     
-    private static final Logger log = Logger.getLogger(SMSCAdaptor.class);
+    private static final Logger log = Logger.getLogger(SmscAdaptor.class);
     
     private long acceptTimeout = com.logica.smpp.Data.ACCEPT_TIMEOUT;
     private PDUProcessorFactory processorFactory = null;
@@ -66,7 +66,7 @@ public class SMSCAdaptor extends SmppObject implements Runnable
      * @param port the port to listen on
      * @see #SMSCListener(int,boolean)
      */
-    public SMSCAdaptor(int port)
+    public SmscAdaptor(int port)
     {
         this.port = port;
         
@@ -99,7 +99,7 @@ public class SMSCAdaptor extends SmppObject implements Runnable
      * @param asynchronous if the listening will be performed as separate thread
      * @see #start()
      */
-    public SMSCAdaptor(int port, boolean asynchronous)
+    public SmscAdaptor(int port, boolean asynchronous)
     {
         this.port = port;
         this.asynchronous = asynchronous;
